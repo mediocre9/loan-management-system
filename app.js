@@ -281,7 +281,7 @@ app.get("/refresh-token", verifyAuth(), async (request, response, next) => {
     return response.status(200).json({
         "code": 200,
         "status": "success",
-        "message": "OTP refreshes successfully.",
+        "message": "Tokens refreshed successfully.",
         "data": {
             "_id": _id,
             "tokens": {
