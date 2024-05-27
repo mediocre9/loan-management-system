@@ -1,4 +1,5 @@
 import { model, Schema } from "mongoose";
+import bcrypt from "bcrypt";
 import isEmail from "validator/lib/isEmail.js";
 
 const userSchema = new Schema({
@@ -24,6 +25,18 @@ const userSchema = new Schema({
     },
 }, { timestamps: true });
 
+userSchema.pre("save", function (next) {
+    if (!this.isModified) {
+        return next();
+    }
 
+    bcrypt.hash(this.password, 10)
+        .then((hashed) => {
+            this.password = hashed;
+            return next();
+        }).catch((error) => {
+            return next(error);
+        });
+})
 
 export const User = model('user', userSchema);

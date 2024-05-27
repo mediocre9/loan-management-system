@@ -1,6 +1,6 @@
-import { ApiError } from "../utils/apiError.js";
 import "dotenv/config";
 import JWT from "jsonwebtoken";
+import { ApiError } from "../utils/apiError.js";
 
 const JWT_SECRET = process.env.JWT_SECRET ?? "secret";
 
