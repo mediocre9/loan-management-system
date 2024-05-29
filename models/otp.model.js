@@ -12,9 +12,20 @@ const otpSchema = new Schema({
         trim: true,
         required: [true, "otp is required!"],
     },
-    createdAt: { type: Date, default: Date.now }
+    createdAt: {
+        type: Date,
+        default: Date.now
+    }
 });
 
-otpSchema.index({ createdAt: 1 }, { expireAfterSeconds: 3600 }); // 1h expiration
+otpSchema.index({ createdAt: 1 }, { expireAfterSeconds: 60 });
 
 export const OTP = model('otp', otpSchema);
+
+OTP.syncIndexes()
+    .then(() => {
+        console.log("indexes are synchronized");
+    })
+    .catch(err => {
+        console.error("error synchronizing indexes", err);
+    });
