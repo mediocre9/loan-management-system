@@ -7,23 +7,25 @@
  * 
  * @todo Implement Create New and Ticket Features . . .
  * 
- * @todo consider the dynamic usage of rateLimiting for 
- * different routes and their importance . .
+ * @todo Consider dynamically implementing 
+ * rate limiting for various routes based on their importance
+ * 
+ * @todo update the TTL index of OTP to 5 minutes
  */
 
 
 import express from "express";
 import rateLimit from "express-rate-limit";
 import cors from 'cors';
-import "dotenv/config";
+import morgan from "morgan";
 import bcrypt from "bcrypt";
 import mongoose from "mongoose";
+import "dotenv/config";
 
 import { ApiError } from "./utils/apiError.js";
 import { OTP, User } from "./models/index.js";
 import { verifyAuth, validateFields } from "./middlewares/index.js";
 import { decodeToken, getAuthTokens, sendEmailToClient } from "./utils/index.js";
-import morgan from "morgan";
 
 
 const PORT = process.env.PORT ?? 8081;
@@ -35,7 +37,7 @@ app.disable('x-powered-by');
 
 app.use(morgan("dev"))
 
-app.use(rateLimit({ limit: 10, windowMs: 120000 }));
+app.use(rateLimit());
 
 app.use(cors({ origin: "*", credentials: true }));
 
@@ -122,7 +124,11 @@ app.post("/login-account", validateFields(["email", "password"]), async (request
     }
 });
 
-app.get("/resend-verification-code", async (request, response, next) => {
+app.get("/resend-verification-code", rateLimit({
+    limit: 3,
+    windowMs: 3600000,
+    message: "You have exceeded the maximum number of OTP requests. Please try again tomorrow.",
+}), async (request, response, next) => {
     try {
         const { email } = request.query;
         const user = await User.exists({ email: email });
@@ -151,6 +157,7 @@ app.post("/account-verification", validateFields(["userId", "otp"]), async (requ
             throw new ApiError("Your otp has been expired!");
         }
 
+        await OTP.findByIdAndDelete(exists._id);
         const user = await User.findByIdAndUpdate(userId, { verified: true });
 
         const { accessToken, refreshToken } = getAuthTokens(user);
@@ -273,23 +280,28 @@ app.patch("/reset-password", validateFields(["userId", "password"]), async (requ
     }
 });
 
-app.get("/refresh-token", verifyAuth(), async (request, response, next) => {
-    const { _id, email } = decodeToken(request.token);
-    const user = { _id, email };
-    const { accessToken, refreshToken } = getAuthTokens(user);
-    console.log(user);
-    return response.status(200).json({
-        "code": 200,
-        "status": "success",
-        "message": "OTP refreshes successfully.",
-        "data": {
-            "_id": _id,
-            "tokens": {
-                "access_token": accessToken,
-                "refresh_token": refreshToken,
+app.get("/refresh-token", verifyAuth({ tokenType: 'refresh' }), async (request, response, next) => {
+    try {
+        const { _id, email, tokenType } = decodeToken(request.token);
+        const user = { _id, email, tokenType };
+
+        const { accessToken, refreshToken } = getAuthTokens(user);
+
+        return response.status(200).json({
+            "code": 200,
+            "status": "success",
+            "message": "Tokens refreshed successfully.",
+            "data": {
+                "_id": _id,
+                "tokens": {
+                    "access_token": accessToken,
+                    "refresh_token": refreshToken,
+                }
             }
-        }
-    });
+        });
+    } catch (error) {
+        next(error);
+    }
 });
 
 
@@ -298,13 +310,23 @@ app.use("*", (request, response) => {
 });
 
 app.use((error, request, response, next) => {
+    if (error instanceof ApiError) {
+        return response
+            .status(error.statusCode)
+            .json({
+                "code": error.statusCode,
+                "message": error.message
+            });
+    }
+
     return response
-        .status(error.statusCode ?? 500)
+        .status(500)
         .json({
-            "code": error.statusCode ?? 500,
-            "message": error.message ?? "Internal Server Error!"
+            "code": 500,
+            "message": "Internal Server Error!"
         });
 });
+
 
 mongoose.connect(DB_URL).then(() => {
     console.log("Database connection established!");
