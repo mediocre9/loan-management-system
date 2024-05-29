@@ -1,6 +1,7 @@
 import JWT from "jsonwebtoken";
 import otp from "otp-generator";
 import "dotenv/config";
+
 import { SMTPClient } from "emailjs";
 import { OTP } from "../models/otp.model.js";
 
@@ -13,20 +14,48 @@ const _getVerificationCode = async (id) => {
         lowerCaseAlphabets: false,
         specialChars: false,
     });
-    console.log(code)
     await OTP.findOneAndDelete({ userId: id });
     await OTP.create({ userId: id, otp: code });
     return code;
 }
 
-const _generateJwt = ({ _id, email }, expiresIn) => {
-    return JWT.sign({ _id, email }, JWT_SECRET, { expiresIn: expiresIn });
+const _generateJwt = ({ _id, email, jwtType, expiresIn }) => {
+    return JWT.sign(
+        {
+            _id,
+            email,
+            jwtType
+        },
+        JWT_SECRET,
+        {
+            expiresIn: expiresIn
+        }
+    );
 }
 
-export const getAuthTokens = (user) => {
-    const accessToken = _generateJwt(user, '10h');
-    const refreshToken = _generateJwt(user, "1d");
-    return { accessToken, refreshToken };
+export const getAuthTokens = ({ _id, email }) => {
+    const accessToken = _generateJwt(
+        {
+            _id: _id,
+            email: email,
+            jwtType: "access",
+            expiresIn: "10h",
+        },
+    );
+
+    const refreshToken = _generateJwt(
+        {
+            _id: _id,
+            email: email,
+            jwtType: "refresh",
+            expiresIn: "1d"
+        },
+    );
+
+    return {
+        accessToken,
+        refreshToken
+    };
 }
 
 export const decodeToken = (token) => {
@@ -38,8 +67,8 @@ export const sendEmailToClient = async ({ _id }) => {
 
     console.log(`OTP: ${otp}`);
     // const client = new SMTPClient({
-    //     user: 'mirzafahadzia9@gmail.com',
-    //     password: 'alnu lhtm lsyx eajr',
+    //     user: '',
+    //     password: '',
     //     host: 'smtp.gmail.com',
     //     port: 465,
     //     ssl: true
@@ -48,8 +77,8 @@ export const sendEmailToClient = async ({ _id }) => {
     // try {
     //     const message = await client.sendAsync({
     //         text: otp.toString(),
-    //         from: 'mirzafahadzia9@gmail.com',
-    //         to: 'mirzafahadzia9@gmail.com',
+    //         from: '',
+    //         to: '',
     //         subject: 'Verification Code',
     //     });
     //     console.log(message);
