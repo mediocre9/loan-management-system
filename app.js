@@ -10,6 +10,8 @@
  * @todo Consider dynamically implementing 
  * rate limiting for various routes based on their importance
  * 
+ * @todo Use the helmet package for security . . .
+ * 
  * @todo update the TTL index of OTP to 5 minutes
  */
 
@@ -62,7 +64,7 @@ app.post("/register-account", validateFields(["email", "password"]), async (requ
         if (!user) {
             user = await User.create({ email, password });
         } else if (user.verified) {
-            throw new ApiError("email is already registered!", 409);
+            throw new ApiError("email is already in use!", 409);
         }
         await sendEmailToClient(user);
         return response.status(201).json({
@@ -131,6 +133,11 @@ app.get("/resend-verification-code", rateLimit({
 }), async (request, response, next) => {
     try {
         const { email } = request.query;
+
+        if (!email) {
+            throw new ApiError("email query param is required!");
+        }
+
         const user = await User.exists({ email: email });
 
         if (user) {
@@ -282,8 +289,8 @@ app.patch("/reset-password", validateFields(["userId", "password"]), async (requ
 
 app.get("/refresh-token", verifyAuth({ tokenType: 'refresh' }), async (request, response, next) => {
     try {
-        const { _id, email, tokenType } = decodeToken(request.token);
-        const user = { _id, email, tokenType };
+        const { _id, email } = decodeToken(request.token);
+        const user = { _id, email };
 
         const { accessToken, refreshToken } = getAuthTokens(user);
 
