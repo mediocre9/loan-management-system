@@ -59,7 +59,7 @@ export const getAuthTokens = ({ _id, email }) => {
 }
 
 export const decodeToken = (token) => {
-    return JWT.verify(token, JWT_SECRET);
+    return JWT.decode(token, JWT_SECRET);
 }
 
 export const sendEmailToClient = async ({ _id }) => {
