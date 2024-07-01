@@ -1244,7 +1244,6 @@
 
     <script>
 
-
         const employmentSummary = {
             borrowerName: "",
             gaps: [],
@@ -1318,7 +1317,7 @@ income.`;
         let s = new Set();
         let e = new Set();
         let duration = 0;
-        let gap = 0;
+        // let gap = 0;
         let totalMonths = 0;
         let totalGap = 0;
 
@@ -1335,29 +1334,94 @@ income.`;
             let startDate = moment(start);
             let endDate = moment(end);
             let gapInfo = {};
+            let gap = 0;
 
-            s.add(start);
-            e.add(end);
+            s.add(JSON.stringify({ startDate, endDate }));
+
+            // console.log("Unsorted", [...s]);
+            // console.log("Sorted", [...s].map(e => JSON.parse(e)).sort((a, b) => moment(a.startDate).diff(b.startDate)));
 
             duration = Math.round(endDate.diff(startDate, "months", true));
 
             if (withGap) {
-                let startDate = [...s];
-                let endDate = [...e];
-                gap = Math.abs(Math.round(moment(endDate[endDate.length - 2]).diff(moment(startDate[startDate.length - 1]), "months")));
 
+                let dates = [...s].map(e => JSON.parse(e)).sort((a, b) => moment(a.startDate).diff(b.startDate));
+                console.log("LENGTH", dates.length);
+                for (let i = 0; i < dates.length - 1; i++) {
+                    console.log("loop index", i);
 
-                if (gap > 0) {
-                    const a = startDate[startDate.length - 1];
-                    const b = endDate[endDate.length - 2];
-                    const startOfTheMonth = moment(b).add(1, 'day').format("l");
-                    const endOfTheMonth = moment(a).subtract(1, 'day').format("l");
-                    gapInfo = {
-                        gap,
-                        startOfTheMonth,
-                        endOfTheMonth,
+                    if (dates[i].endDate < dates[i + 1].startDate) {
+                        console.log("LESSER 1", moment(dates[i].endDate).diff(moment(dates[i + 1].startDate), "months"));
+                        gap = Math.abs(Math.round(moment(dates[i].endDate).diff(moment(dates[i + 1].startDate), "months")));
+                    } else {
+                        console.log("LESSER 2", moment(dates[i + 1].startDate).diff(moment(dates[i].endDate), "months"));
+                        gap = Math.abs(Math.round(moment(dates[i + 1].startDate).diff(moment(dates[i].endDate), "months")));
                     }
+                    console.log("Sorted", dates);
+
+
+
+                    if (gap > 0) {
+                        let a;
+                        let b;
+
+                        if (dates[i].endDate < dates[i + 1].startDate) {
+                            console.log("LESSER GAP 1");
+                            a = dates[i + 1].startDate;
+                            b = dates[i].endDate;
+                        } else {
+                            console.log("LESSER GAP 2");
+                            a = dates[i].startDate;
+                            b = dates[i + 1].endDate;
+                        }
+
+                        console.log("GAP START", a);
+                        console.log("GAP END", b);
+                        console.log("MOMENT", gap);
+
+                        const startOfTheMonth = moment(b).add(1, 'day').format("l");
+                        const endOfTheMonth = moment(a).subtract(1, 'day').format("l");
+
+                        console.log("GAP START OF MONTH", startOfTheMonth);
+                        console.log("GAP END OF MONTH", endOfTheMonth);
+                        gapInfo = {
+                            gap,
+                            startOfTheMonth,
+                            endOfTheMonth,
+                        }
+                    }
+
                 }
+
+
+
+
+                // for (let i = (dates.length - 1 && dates.length > 1); i >= 0; i--) {
+                //     // let endDate = [...e].map(e => JSON.parse(e));
+                //     console.log("loop index", i);
+                //     gap = Math.abs(Math.round(moment(dates[i].endDate).diff(moment(dates[i - 1].startDate), "months")));
+                //     console.log("Sorted", dates);
+                //     console.log("INDEX FOR START", i - 1);
+                //     console.log("INDEX FOR END", i);
+
+                //     console.log("GAP START", dates[i - 1].startDate);
+                //     console.log("GAP END", dates[i].endDate);
+                //     console.log("MOMENT", moment(dates[i].endDate).diff(moment(dates[i - 1].startDate), "months"));
+
+                //     console.log(gap);
+                //     if (gap > 0) {
+                //         const a = dates[i - 1].startDate;
+                //         const b = dates[i].endDate;
+                //         const startOfTheMonth = moment(b).add(1, 'day').format("l");
+                //         const endOfTheMonth = moment(a).subtract(1, 'day').format("l");
+                //         gapInfo = {
+                //             gap,
+                //             startOfTheMonth,
+                //             endOfTheMonth,
+                //         }
+                //     }
+
+                // }
             }
             return { duration, gapInfo };
         }
@@ -1438,6 +1502,7 @@ income.`;
                         borrowerName = name.value.toString();
 
                         employmentBlocks.forEach((block, index) => {
+                            console.log("CALLED");
                             const employerName = block.querySelector(".additionalEmployerName");
                             const position = block.querySelector(".additionalPosition");
                             const startDateInput = block.querySelector('.additionalStartDate').value;
@@ -1446,6 +1511,7 @@ income.`;
 
                             const startDate = new Date(startDateInput);
                             const endDate = isCurrentJob ? new Date() : new Date(endDateInput);
+
                             const { duration } = calculateMonths(startDate, endDate);
                             totalMonths += duration;
                             durations.push({ totalMonths, startDate, endDate, isCurrentJob });
@@ -1454,9 +1520,14 @@ income.`;
                                 const { gapInfo } = calculateMonths(startDate, endDate, { withGap: true });
                                 const { gap, startOfTheMonth, endOfTheMonth } = gapInfo;
                                 totalGap += gap;
-                                gaps.push({ totalGap, startOfTheMonth, endOfTheMonth });
+
+                                // if (totalGap > 0) {
+                                gaps.push({ gap, startOfTheMonth, endOfTheMonth });
+                                // }
+                                console.log("MAIN GAPS", gaps.length, "GAP VALUE", gap, "TOTAL GAP VALUE", totalGap);
                             }
 
+                            gaps = gaps.filter(e => e.startOfTheMonth !== undefined && e.endOfTheMonth !== undefined);
                             employers.push(employerName.value.toString());
                             positions.push(position.value.toString());
                         });
@@ -1507,7 +1578,7 @@ income.`;
                         summarySectionDuration.innerText = `Total Month(s): ${durations[durations.length - 1].totalMonths
                             }`;
 
-                        summarySectionGaps.innerText = `Total Gap: ${gaps.length > 0 ? gaps[gaps.length - 1].totalGap : 0} month(s).`;
+                        summarySectionGaps.innerText = `Total Gap: ${gaps.length > 0 ? gaps[gaps.length - 1].gap : 0} month(s).`;
                     }
                 } else if (id == "prev") {
                     clearAllData();
@@ -1542,6 +1613,8 @@ income.`;
             positions = [];
             gaps = [];
             durations = [];
+            s.clear();
+            e.clear();
 
             summarySectionIntro.innerText = "";
             summarySectionDuration.innerText = "";
