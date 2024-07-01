@@ -1,2072 +1,1745 @@
-/**
- * @todo Refactor the code
- * Priority-Level 2
- */
+<!-- changed onblur to onblur event -->
 
-// The Employemnent Information Script Starts  here
-var errorMessage = '';
-var currentEmploymentDates = [];     // Its store only dates of current Emp 
-var currentEmployementExists = false;
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Logic Links</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment-with-locales.min.js" integrity="sha512-4F1cxYdMiAW98oomSLaygEwmCnIP38pb4Kx70yQYqRwLVCs3DbRumfBq82T08g/4LJ/smbFGFpmeFlQgoDccgg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .input-field {
+            width: 100%;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="svg_wrap"></div>
+    <h1>Logic Links</h1>
+    <section>
+        <p class="q-text">Please enter employment history. Must put at least 2 years.</p>
+        <div id="additionalEmploymentContainer">
+            <div class="additionalEmploymentBlock">
+                <strong class="strongSubHeading">Current Employer</strong>
+                <input type="text" class="additionalBorrowerName" onblur="ValidateInputs(this,event)" placeholder="Borrower Name" />
+                <input type="text" class="additionalEmployerName" placeholder="Employer Name" onblur="ValidateInputs(this,event)" />
+
+                <input type="text" class="additionalPosition" placeholder="Position" onblur="ValidateInputs(this,event)" />
+                <div style="display: flex; align-items: center">
+                    <input type="checkbox" name="" class="CurrenPositionCheck" style="width: 17px; height: 20px; margin-right: 10px" onblur="currentJob(this)" />
+                    <label for="CurrenPositionCheck">Current Position</label>
+                </div>
+                <input onfocus="(this.type='date')" onblur="ValidateInputs(this,event)" class="additionalStartDate" placeholder="Start Date" />
+                <input onfocus="(this.type='date')" onblur="ValidateInputs(this,event)" class="additionalEndDate" placeholder="End Date" />
+
+                <p class="errorMessage"></p>
+            </div>
+        </div>
+        <!-- School-related fields block -->
+        <template id="schoolFieldsTemplate">
+            <div class="schoolFields">
+                <strong class="strongSubHeading">School Details</strong>
+                <input type="text" class="SchoolName" placeholder="School Name" />
+                <input type="text" class="Degree" placeholder="Degree" />
+                <input onfocus="(this.type='date')" onblur="checkDateRange()" class="additionalStartDate" placeholder="Start Date" />
+                <input onfocus="(this.type='date')" onblur="checkDateRange()" class="additionalEndDate" placeholder="End Date" />
+                <p class="errorMessage"></p>
+            </div>
+        </template>
+        <div id="schoolTogl" style="display: none">
+            <div style="display: flex; align-items: center">
+                <input type="checkbox" id="SchoolChecker" style="width: 17px; height: 20px; margin-right: 10px" onblur="toggleSchoolFields(this)" />
+                <div>I Was in School ! No Previous Employment</div>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <p class="q-text">What Is Your Main Source of Income?</p>
+        <strong class="strongSubHeading">Source of Income</strong>
+        <select name="" id="SourceOfIncomeSelect" onblur="sourceOfIncome()">
+            <option value="Salary" selected>
+                Salary
+            </option>
+            <option value="Hourly">Hourly</option>
+            <option value="Variable income">Variable</option>
+            <option value="Self-employed">Self-employed</option>
+        </select>
+    </section>
+
+    <section>
+        <div id="salarySection">
+            <p class="q-text">Please fill the following fields.</p>
+            <div id="salleryBlockContainer">
+                <div class="SalaryBlocks">
+                    <strong class="strongSubHeading" style="margin-bottom: 10px">Salary</strong>
+                    <label for="">Pay Period Start Date </label>
+                    <input placeholder="Pay Period Start Date" onfocus="(this.type='date')" onblur="validateSalaryInputs(this,event)" class="SalaryStartDate" />
+                    <label for="">Pay Period End Date</label>
+                    <input placeholder="Pay Period End Date" onfocus="(this.type='date')" onblur="validateSalaryInputs(this,event)" class="SalaryEndDate" />
+                    <label for="">Current Gross Base Pay</label>
+                    <input type="number" placeholder="Current Gross Base Pay" class="currentGrossPay" onblur="validateSalaryInputs(this,event)" />
+                    <label for="">YTD Gross Base Pay</label>
+                    <input type="number" placeholder="YTD Gross Base Pay" class="YTDGrossPays" onblur="validateSalaryInputs(this,event)" />
+                    <div class="consoleData" style="display: none">
+                        <input type="hidden" class="newYTD" />
+                        <label for="">Validated Income</label>
+                        <input type="hidden" class="newIncome" />
+                        <label for="">Multiplier</label>
+                        <input type="hidden" class="newmultipier" />
+                    </div>
+                    <p class="filledMessage"></p>
+                </div>
+            </div>
+            <div class="pIntenvalBox" style="display: none">
+                <select name="pIntenval" class="pIntenval" onblur="updateMultiplier(this)">
+                    <option value="Bi-Weekly">Select Pay period Interval</option>
+                    <option value="Bi-Weekly">Bi-Weekly</option>
+                    <option value="2x Per Month">2x Per Month</option>
+                </select>
+            </div>
+        </div>
+        <div id="hourlySection" style="display: none">
+            <p class="q-text">Please fill the following fields.</p>
+            <div id="hourlyBlockContainer">
+                <div class="hourlyBlocks">
+                    <strong class="strongSubHeading" style="margin-bottom: 10px">Hourly</strong>
+                    <label for="">Pay Period Start Date </label>
+                    <input onfocus="(this.type='date')" onblur="validateHourlyInputs(this,event)" class="hourlyStartDate" />
+                    <label for="">Pay Period End Date</label>
+                    <input onfocus="(this.type='date')" onblur="validateHourlyInputs(this,event)" class="hourlyEndDate" />
+                    <label for="">Hourly Rate</label>
+                    <input type="number" class="hourlyRate" onblur="validateHourlyInputs(this,event)" />
+                    <label for="">Current Hours Base Pay (include Holiday, Sick, PTO)</label>
+                    <input type="number" class="currentHourBasePay" onblur="validateHourlyInputs(this,event)" />
+                    <label for="">Current Gross Base Pay (include Holiday, Sick, PTO)</label>
+                    <input type="number" class="currentGrossBasePay-hourly" onblur="validateHourlyInputs(this,event)" />
+                    <label for="">YTD Hours (include Holiday, Sick, PTO)</label>
+                    <input type="number" class="YTDhour-hourly" onblur="validateHourlyInputs(this,event)" />
+                    <label for="">YTD Gross Base Pay (include Holiday, Sick, PTO)</label>
+                    <input type="number" class="ytdGrossBasePay-hourly" onblur="validateHourlyInputs(this,event)" />
+                    <div class="hourlyConsole" style="display: none">
+                        <label for="">checkHourlyRate</label>
+                        <input type="number" class="checkHourlyRate-Field" onblur="validateHourlyInputs(this,event)" />
+                        <label for="">paychecksYTD</label>
+                        <input type="number" class="paychecksYTD-Field" onblur="validateHourlyInputs(this,event)" />
+                        <label for="">expectedYTDHour</label>
+                        <input type="number" class="expectedYTDHour-Field" onblur="validateHourlyInputs(this,event)" />
+                        <label for="">Income</label>
+                        <input type="number" class="income-Field" onblur="validateHourlyInputs(this,event)" />
+                    </div>
+                    <p class="filledMessage"></p>
+                </div>
+            </div>
+            <div class="pIntenvalBox2" style="display: none">
+                <select name="pIntenval" class="pIntenval" onblur="updateFrequency(this)">
+                    <option value="Bi-Weekly">Select Pay period Interval</option>
+                    <option value="Bi-Weekly">Bi-Weekly</option>
+                    <option value="2x Per Month">2x Per Month</option>
+                </select>
+            </div>
+            <div class="reasonBox" style="display: none">
+                <label for="">What was the reason for less than 40 hours?</label>
+                <select name="" id="reasonPerson">
+                    <option value="Borrower" selected>
+                        Borrower
+                    </option>
+                    <option value="Employer">Employer</option>
+                </select>
+                <label for="">Explanation</label>
+                <textarea name="" id="" rows="6" placeholder="Write a detail LOX"></textarea>
+
+                <div class="yearCollection"></div>
+            </div>
+        </div>
+        <div id="variableSection" style="display: none">
+            <div class="basePayQuestion">
+                <p>Do you have a base salary pay?</p>
+                <select name="" id="basePayQuestionSelect" onblur="basePayQuestion()">
+                    <option value="Yes">base salary pay</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                </select>
+            </div>
+            <div id="basePaySalary" style="display: none">
+                <strong>Base Pay Salary</strong>
+                <div>
+                    <label for="">Current Rate of Pay</label>
+                    <input type="number" class="currentRateOfPay" onblur="calcBasePay()" />
+                    <label for="">Pay frequency</label>
+                    <select class="payFrequencyInVar" onblur="calcBasePay()">
+                        <option value="Yearly" selected>
+                            Yearly
+                        </option>
+                        <option value="Monthly">Monthly</option>
+                        <option value="Bi-Monthly">Bi-Monthly</option>
+                        <option value="Weekly">Weekly</option>
+                        <option value="Bi-Weekly">Bi-Weekly</option>
+                        <option value="Hourly">Hourly</option>
+                    </select>
+                    <div class="clacResults" style="display: none">
+                        <label for="">Yearly Earning</label>
+                        <input type="number" class="yearlyEarning" disabled />
+                        <label for="">Monthly Earning</label>
+                        <input type="number" class="monthlyEarning" disabled />
+                    </div>
+                </div>
+                <div class="Ytdand2year"></div>
+                <a href="javascript:void(0)" style="
+                            width: 140px;
+                            background-color: #1ab188;
+                            color: #fff;
+                            text-decoration: none;
+                            border-radius: 5px;
+                            height: 38px;
+                            line-height: 38px;
+                            display: inline-block;
+                            text-align: center;
+                            margin-top: 10px;
+                        " onclick="salleryToBasePay()">
+                    Submit
+                </a>
+            </div>
+            <style>
+                /* Style for checkbox container */
+                .checkbox-container {
+                    display: flex;
+                    flex-direction: column;
+                }
+
+                /* Style for checkbox label */
+                .checkbox-label {
+                    display: inline-flex;
+                    align-items: center;
+                    margin-right: 20px;
+                }
+
+                /* Style for custom checkbox */
+                .custom-checkbox {
+                    appearance: none;
+                    -webkit-appearance: none;
+                    -moz-appearance: none;
+                    width: 16px;
+                    height: 16px;
+                    border: 1px solid #ccc;
+                    border-radius: 3px;
+                    outline: none;
+                    cursor: pointer;
+                    margin-right: 8px;
+                    padding: 8px !important;
+                }
+
+                /* Style for custom checkbox when checked */
+                .custom-checkbox:checked {
+                    background-color: #1ab188;
+                    border-color: #1ab188;
+                }
+
+                /* Style for custom checkbox label text */
+                .checkbox-text {
+                    font-family: Arial, sans-serif;
+                    font-size: 14px;
+                    color: #333;
+                }
+            </style>
+            <div class="wrpper-basePay" style="display: none">
+                <div id="varPay">
+                    <strong style="margin-top: 10px; display: inline-block">What type of variable pay do we have?</strong>
+                    <p style="margin-top: 5px; margin-bottom: 5px">You should be able to check all that apply</p>
+                    <form class="checkbox-container">
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="custom-checkbox" name="compensation" value="OT" />
+                            <span class="checkbox-text">OT</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="custom-checkbox" name="compensation" value="Commission" />
+                            <span class="checkbox-text">Commission</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="custom-checkbox" name="compensation" value="Bonus" />
+                            <span class="checkbox-text">Bonus</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="custom-checkbox" name="compensation" value="Shift" />
+                            <span class="checkbox-text">Shift</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="custom-checkbox" name="compensation" value="Weekend" />
+                            <span class="checkbox-text">Weekend</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="custom-checkbox" name="compensation" value="Holiday" />
+                            <span class="checkbox-text">Holiday</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="custom-checkbox" name="compensation" value="Per Load" />
+                            <span class="checkbox-text">Per Load</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="custom-checkbox" name="compensation" value="Per Mile" />
+                            <span class="checkbox-text">Per Mile</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="custom-checkbox" name="compensation" value="Tips" />
+                            <span class="checkbox-text">Tips</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="custom-checkbox" name="compensation" value="Percentage" />
+                            <span class="checkbox-text">Percentage</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="custom-checkbox" name="compensation" value="Stop Pay" />
+                            <span class="checkbox-text">Stop Pay</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="custom-checkbox" name="compensation" value="Detention Pay" />
+                            <span class="checkbox-text">Detention Pay</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="custom-checkbox" name="compensation" value="Accessorial Pay" />
+                            <span class="checkbox-text">Accessorial Pay</span>
+                        </label>
+                    </form>
+                </div>
+                <div id="varBoxOnPay">
+                    <div class="renderBasePay"></div>
+                </div>
+            </div>
+        </div>
+        <div id="selfEmployedSection" style="display: none">
+            <p class="q-text">What is your business structure?</p>
+
+            <select name="" id="businessStructureSelect" onblur="changeBusinessStructure()">
+                <option value="" selected>
+                    Select Business Structure
+                </option>
+                <option value="Sole Proprietor Schedule C">Sole Proprietor Schedule C</option>
+                <option value="C Corporation - 1120">C Corporation - 1120</option>
+                <option value="S Corporation - 1120S">S Corporation - 1120S</option>
+                <option value="Partnership - 1065">Partnership - 1065</option>
+            </select>
+            <p class="errMessage" style="display: none; color: #128062">
+                self-employment must be 2 years, no previous employment
+            </p>
+            <div id="SoleProprietorScheduleC" style="display: none">
+                <h1>Schedule C - 1040</h1>
+                <form>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Labels</th>
+                                <th>2023</th>
+                                <th>2022</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Net Profit (or Loss) - Line 31</td>
+                                <td>
+                                    <input type="number" class="input-field" name="net_profit_2023" value="85000" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="net_profit_2022" value="75000" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Nonrecurring Other Income - Part 1, Line 6</td>
+                                <td>
+                                    <input type="number" class="input-field" name="nonrecurring_income_2023" value="1500" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="nonrecurring_income_2022" value="0" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Depletion - Line 12</td>
+                                <td>
+                                    <input type="number" class="input-field" name="depletion_2023" value="2500" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="depletion_2022" value="3500" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Depreciation - Line 13</td>
+                                <td>
+                                    <input type="number" class="input-field" name="depreciation_2023" value="1500" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="depreciation_2022" value="1700" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Mileage - Part IV, Line 44a</td>
+                                <td>
+                                    <input type="number" class="input-field" name="mileage_2023" value="1400" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="mileage_2022" value="0" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Meals & Entertainment - Line 24B</td>
+                                <td>
+                                    <input type="number" class="input-field" name="meals_entertainment_2023" value="1500" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="meals_entertainment_2022" value="1800" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Amortization & Casualty Loss - Line 27a (Part V)</td>
+                                <td>
+                                    <input type="number" class="input-field" name="Casualty_Loss_2023" value="0" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="Casualty_Loss_2022" value="0" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Business Use of Home - Line 30</td>
+                                <td>
+                                    <input type="number" class="input-field" name="business_use_home_2023" value="8500" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="business_use_home_2022" value="8500" />
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <a href="javascript:void(0)" class="selfEmp-Sub-Btn" onclick="calculateTotalEarningsSelfEmployed()">
+                        Submit
+                    </a>
+
+                    <div class="selfemployeeResult" style="display: none">
+                        <strong>2023</strong>
+                        <label for="">Total Yearly Income</label>
+                        <input type="number" disabled class="selfEmployee-earning23" />
+                        <label for="">Monthly Income</label>
+                        <input type="number" disabled class="selfEmployee-Monthlyearning23" />
+                        <strong>2022</strong>
+                        <label for="">Total Yearly Income</label>
+                        <input type="number" disabled class="selfEmployee-earning22" />
+                        <label for="">Monthly Income</label>
+                        <input type="number" disabled class="selfEmployee-Monthlyearning22" />
+
+                        <strong>2 year Average</strong>
+                        <input type="number" disabled class="selfEmployee-2YearAverage" />
+                    </div>
+                </form>
+            </div>
+            <div id="CCorporation1120" style="display: none">
+                <h1>C Corporation - 1120</h1>
+                <form>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Labels</th>
+                                <th>2023</th>
+                                <th>2022</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Wages: W-2, Box 5</td>
+                                <td>
+                                    <input type="number" class="input-field" name="wages_amount_2023" value="45000" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="wages_amount_2022" value="45000" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="3">
+                                    <h3 style="text-align: center">Business Income</h3>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Capital Gain Income or Loss</td>
+                                <td>
+                                    <input type="number" class="input-field" name="capital_gain_amount_2023" value="35000" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="capital_gain_amount_2022" value="35000" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Net Gain or Loss (Form 4797)</td>
+                                <td>
+                                    <input type="number" class="input-field" name="net_gain_loss_amount_2023" value="5000" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="net_gain_loss_amount_2022" value="5000" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Other Income or Loss</td>
+                                <td>
+                                    <input type="number" class="input-field" name="other_income_loss_amount_2023" value="5000" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="other_income_loss_amount_2022" value="5000" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Depreciation</td>
+                                <td>
+                                    <input type="number" class="input-field" name="depreciation_amount_2023" value="5000" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="depreciation_amount_2022" value="5000" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Depreciation 1120</td>
+                                <td>
+                                    <input type="number" class="input-field" name="depreciation_1120_amount_2023" value="5000" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="depreciation_1120_amount_2022" value="5000" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Depletion</td>
+                                <td>
+                                    <input type="number" class="input-field" name="depletion_amount_2023" value="5000" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="depletion_amount_2022" value="5000" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Domestic Production Activities</td>
+                                <td>
+                                    <input type="number" class="input-field" name="domestic_production_amount_2023" value="5000" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="domestic_production_amount_2022" value="5000" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Other - 1120</td>
+                                <td>
+                                    <input type="number" class="input-field" name="other_1120_amount_2023" value="5000" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="other_1120_amount_2022" value="5000" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Net Operating Loss</td>
+                                <td>
+                                    <input type="number" class="input-field" name="net_operating_loss_amount_2023" value="5000" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="net_operating_loss_amount_2022" value="5000" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Special Deduction</td>
+                                <td>
+                                    <input type="number" class="input-field" name="special_deduction_amount_2023" value="5000" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="special_deduction_amount_2022" value="5000" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Taxable Income</td>
+                                <td>
+                                    <input type="number" class="input-field" name="taxable_income_amount_2023" value="5000" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="taxable_income_amount_2022" value="5000" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Total Tax</td>
+                                <td>
+                                    <input type="number" class="input-field" name="total_tax_amount_2023" value="10000" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="total_tax_amount_2022" value="10000" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Mortgages, Notes, Bonds payable in less than 1 year</td>
+                                <td>
+                                    <input type="number" class="input-field" name="mortgages_notes_bonds_amount_2023" value="10000" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="mortgages_notes_bonds_amount_2022" value="10000" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Travel & Entertainment</td>
+                                <td>
+                                    <input type="number" class="input-field" name="travel_entertainment_amount_2023" value="10000" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="travel_entertainment_amount_2022" value="10000" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Dividend Cash</td>
+                                <td>
+                                    <input type="number" class="input-field" name="dividend_cash_amount_2023" value="10000" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="dividend_cash_amount_2022" value="10000" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Dividend Stock</td>
+                                <td>
+                                    <input type="number" class="input-field" name="dividend_stock_amount_2023" value="10000" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="dividend_stock_amount_2022" value="10000" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Dividend Property</td>
+                                <td>
+                                    <input type="number" class="input-field" name="dividend_property_amount_2023" value="10000" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="dividend_property_amount_2022" value="10000" />
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <a href="javascript:void(0)" class="selfEmp-Sub-Btn" onclick="calculateTotalIncomeCCorporation()">
+                        Submit
+                    </a>
+                    <div class="selfemployeeResult" style="display: none">
+                        <strong>2023</strong>
+                        <label for="">Total Yearly Income</label>
+                        <input type="number" disabled class="selfEmployee-earning23" />
+                        <label for="">Monthly Income</label>
+                        <input type="number" disabled class="selfEmployee-Monthlyearning23" />
+                        <strong>2022</strong>
+                        <label for="">Total Yearly Income</label>
+                        <input type="number" disabled class="selfEmployee-earning22" />
+                        <label for="">Monthly Income</label>
+                        <input type="number" disabled class="selfEmployee-Monthlyearning22" />
+
+                        <strong>2 year Average</strong>
+                        <input type="number" disabled class="selfEmployee-2YearAverage" />
+                    </div>
+                </form>
+                <p class="errMessage" style="display: none; color: #128062">
+                    self-employment must be 2 years, no previous employment
+                </p>
+            </div>
+            <div id="SCorporation1120S" style="display: none">
+                <h1>S Corporation - 1120S</h1>
+                <form>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Labels</th>
+                                <th>2023</th>
+                                <th>2022</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Form W-2 -->
+                            <tr>
+                                <td colspan="3">
+                                    <h3>Form W-2</h3>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Wages: W-2, Box 5</td>
+                                <td>
+                                    <input type="number" class="input-field" name="wages_2023" value="45000" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="wages_2022" value="45000" />
+                                </td>
+                            </tr>
+
+                            <!-- Individual Income -->
+                            <tr>
+                                <td colspan="3">
+                                    <h3>Individual Income</h3>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Ordinary Business Income or Loss - K1 Line 1</td>
+                                <td>
+                                    <input type="number" class="input-field" name="ordinary_income_2023" value="25000" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="ordinary_income_2022" value="25000" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Net Rental Income or Loss - K1 Line 2</td>
+                                <td>
+                                    <input type="number" class="input-field" name="rental_income_2023" value="5000" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="rental_income_2022" value="5000" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Other Rental Income or Loss - K1 Line 3</td>
+                                <td>
+                                    <input type="number" class="input-field" name="other_rental_income_2023" value="5000" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="other_rental_income_2022" value="5000" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Distributions - K1 Line 16D</td>
+                                <td>
+                                    <input type="number" class="input-field" name="distributions_2023" value="20000" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="distributions_2022" value="20000" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Contributions</td>
+                                <td>
+                                    <input type="number" class="input-field" name="contributions_2023" value="-5000" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="contributions_2022" value="-5000" />
+                                </td>
+                            </tr>
+
+                            <!-- Business Income -->
+                            <tr>
+                                <td colspan="3">
+                                    <h3>Business Income</h3>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Net Gain Form 4797 - 1120S Line 4</td>
+                                <td>
+                                    <input type="number" class="input-field" name="net_gain_2023" value="1" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="net_gain_2022" value="1" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Other Income or Loss - 1120S Line 5</td>
+                                <td>
+                                    <input type="number" class="input-field" name="other_income_2023" value="1" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="other_income_2022" value="1" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Depreciation - 1120S Line 14</td>
+                                <td>
+                                    <input type="number" class="input-field" name="depreciation_1120S_2023" value="1" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="depreciation_1120S_2022" value="1" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Depreciation - 8825 Line 14</td>
+                                <td>
+                                    <input type="number" class="input-field" name="depreciation_8825_2023" value="1" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="depreciation_8825_2022" value="1" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Depletion - 1120S Line 15</td>
+                                <td>
+                                    <input type="number" class="input-field" name="depletion_2023" value="1" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="depletion_2022" value="1" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Other - 1120S Line 19</td>
+                                <td>
+                                    <input type="number" class="input-field" name="other_2023" value="5000" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="other_2022" value="5000" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Mortgages, Notes, Bonds Payable in less than 1 year - Schedule L Line 17D</td>
+                                <td>
+                                    <input type="number" class="input-field" name="mortgages_2023" value="5000" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="mortgages_2022" value="5000" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Travel & Entertainment - Schedule M-1 Line 3B</td>
+                                <td>
+                                    <input type="number" class="input-field" name="travel_entertainment_2023" value="-5000" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="travel_entertainment_2022" value="-5000" />
+                                </td>
+                            </tr>
+
+                            <!-- Other Information -->
+                            <tr>
+                                <td colspan="3">
+                                    <h3>Other Information</h3>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Months in Service</td>
+                                <td>
+                                    <input type="number" class="input-field" name="months_in_service_2023" value="12" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="months_in_service_2022" value="12" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Percent Ownership</td>
+                                <td>
+                                    <input type="number" class="input-field" name="percent_ownership_2023" value="100" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="percent_ownership_2022" value="100" />
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <a href="javascript:void(0)" class="selfEmp-Sub-Btn" onclick="calculateTotalEarningsSCorp()">
+                        Submit
+                    </a>
+
+                    <div class="sCorpResult" style="display: none">
+                        <strong>2023</strong>
+                        <strong>K1 Income</strong>
+                        <label>W2 Income</label>
+                        <input type="number" disabled class="sCorp-earning23" />
+                        <label>K1 Lines 1,2,3</label>
+                        <input type="number" disabled class="sCorp-K1Lines23" />
+                        <label>Cash Flow Adjustment </label>
+                        <input type="number" disabled class="sCorp-CashFlowAdjustment23" />
+                        <strong>Distributed K1 Income</strong>
+                        <label>W2 Income</label>
+                        <input type="number" disabled class="sCorp-DistributedW2Income23" />
+                        <label>Distributions less Contributions</label>
+                        <input type="number" disabled class="sCorp-DistributionslessContributions23" />
+                        <label>K-1 Calculated Income</label>
+                        <input type="number" disabled class="sCorp-K1CalculatedIncome23" />
+                        <label>Monthly Income</label>
+                        <input type="number" disabled class="sCorp-MonthlyIncome23" />
+                        <label>Distributed K-1 Calculated Income</label>
+                        <input type="number" disabled class="sCorp-DistributedK1CalculatedIncome23" />
+                        <label>Monthly Income</label>
+                        <input type="number" disabled class="sCorp-DistributedMonthlyIncome23" />
+
+                        <strong>2022</strong>
+                        <strong>K1 Income</strong>
+                        <label>W2 Income</label>
+                        <input type="number" disabled class="sCorp-earning22" />
+                        <label>K1 Lines 1,2,3</label>
+                        <input type="number" disabled class="sCorp-K1Lines22" />
+                        <label>Cash Flow Adjustment </label>
+                        <input type="number" disabled class="sCorp-CashFlowAdjustment22" />
+                        <strong>Distributed K1 Income</strong>
+                        <label>W2 Income</label>
+                        <input type="number" disabled class="sCorp-DistributedW2Income22" />
+                        <label>Distributions less Contributions</label>
+                        <input type="number" disabled class="sCorp-DistributionslessContributions22" />
+                        <label>K-1 Calculated Income</label>
+                        <input type="number" disabled class="sCorp-K1CalculatedIncome22" />
+                        <label>Monthly Income</label>
+                        <input type="number" disabled class="sCorp-MonthlyIncome22" />
+                        <label>Distributed K-1 Calculated Income</label>
+                        <input type="number" disabled class="sCorp-DistributedK1CalculatedIncome22" />
+                        <label>Monthly Income</label>
+                        <input type="number" disabled class="sCorp-DistributedMonthlyIncome22" />
+                    </div>
+                </form>
+            </div>
+            <div id="Partnership1065" style="display: none">
+                <h1>Partnership - 1065</h1>
+                <form>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Labels</th>
+                                <th>2023</th>
+                                <th>2022</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Form W-2 -->
+                            <tr>
+                                <td colspan="3">
+                                    <h3>Form W-2</h3>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Wages: W-2, Box 5</td>
+                                <td>
+                                    <input type="number" class="input-field" name="wages_2023" value="45000" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="wages_2022" value="45000" />
+                                </td>
+                            </tr>
+
+                            <!-- Individual Income -->
+                            <tr>
+                                <td colspan="3">
+                                    <h3>Individual Income</h3>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Ordinary Business Income or Loss - K1 Line 1</td>
+                                <td>
+                                    <input type="number" class="input-field" name="ordinary_income_2023" value="1" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="ordinary_income_2022" value="1" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Net Rental Income or Loss - K1 Line 2</td>
+                                <td>
+                                    <input type="number" class="input-field" name="rental_income_2023" value="1" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="rental_income_2022" value="1" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Other Rental Income or Loss - K1 Line 3</td>
+                                <td>
+                                    <input type="number" class="input-field" name="other_rental_income_2023" value="1" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="other_rental_income_2022" value="1" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Guaranteed Payments - K-1 Line 4 or 4c on 2019+</td>
+                                <td>
+                                    <input type="number" class="input-field" name="guaranteed_payments_2023" value="5000" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="guaranteed_payments_2022" value="5000" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Distributions - K1 Line 16D</td>
+                                <td>
+                                    <input type="number" class="input-field" name="distributions_2023" value="1" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="distributions_2022" value="1" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Contributions</td>
+                                <td>
+                                    <input type="number" class="input-field" name="contributions_2023" value="5" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="contributions_2022" value="5" />
+                                </td>
+                            </tr>
+
+                            <!-- Business Income -->
+                            <tr>
+                                <td colspan="3">
+                                    <h3>Business Income</h3>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Ordinary Income or Loss (1065 Line 4)</td>
+                                <td>
+                                    <input type="number" class="input-field" name="ordinary_income_1065_2023" value="10" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="ordinary_income_1065_2022" value="10" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Net Farm Profit (1065 Line 5)</td>
+                                <td>
+                                    <input type="number" class="input-field" name="net_farm_profit_2023" value="10" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="net_farm_profit_2022" value="10" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Net Gain Form 4797 (1065 Line 6)</td>
+                                <td>
+                                    <input type="number" class="input-field" name="net_gain_form_4797_2023" value="10" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="net_gain_form_4797_2022" value="10" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Other Income or Loss (1065 Line 7)</td>
+                                <td>
+                                    <input type="number" class="input-field" name="other_income_1065_2023" value="10" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="other_income_1065_2022" value="10" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Depreciation (1065 Line 16c &amp; 8825 Line 14)</td>
+                                <td>
+                                    <input type="number" class="input-field" name="depreciation_1065_2023" value="10" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="depreciation_1065_2022" value="10" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Depletion (1065 Line 17)</td>
+                                <td>
+                                    <input type="number" class="input-field" name="depletion_1065_2023" value="10" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="depletion_1065_2022" value="10" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Amortization/Casualty Loss (1065 Line 20)</td>
+                                <td>
+                                    <input type="number" class="input-field" name="amortization_loss_2023" value="10" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="amortization_loss_2022" value="10" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Mortgages, Notes, Bonds payable in less than 1 year (Sch-L Line 16d)</td>
+                                <td>
+                                    <input type="number" class="input-field" name="mortgages_notes_bonds_2023" value="-10" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="mortgages_notes_bonds_2022" value="-10" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Travel & Entertainment (Sch-M1 Line 4b)</td>
+                                <td>
+                                    <input type="number" class="input-field" name="travel_entertainment_2023" value="-10" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="travel_entertainment_2022" value="-10" />
+                                </td>
+                            </tr>
+
+                            <!-- Other Information -->
+                            <tr>
+                                <td colspan="3">
+                                    <h3>Other Information</h3>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Months in Service</td>
+                                <td>
+                                    <input type="number" class="input-field" name="months_in_service_2023" value="12" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="months_in_service_2022" value="12" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Percent Ownership</td>
+                                <td>
+                                    <input type="number" class="input-field" name="percent_ownership_2023" value="100" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="percent_ownership_2022" value="100" />
+                                </td>
+                            </tr>
+
+                            <!-- K-1 Income -->
+                            <tr>
+                                <td colspan="3">
+                                    <h3>K-1 Income</h3>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>W-2 Income</td>
+                                <td>
+                                    <input type="number" class="input-field" name="w2_income_2023" value="45000" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="w2_income_2022" value="45000" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>K-1 Lines 1,2,3</td>
+                                <td>
+                                    <input type="number" class="input-field" name="k1_lines_123_2023" value="3" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="k1_lines_123_2022" value="3" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Cash Flow Adjustments</td>
+                                <td>
+                                    <input type="number" class="input-field" name="cash_flow_adjustments_2023" value="50" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="cash_flow_adjustments_2022" value="50" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Guaranteed Payments</td>
+                                <td>
+                                    <input type="number" class="input-field" name="guaranteed_payments_k1_2023" value="5000" />
+                                </td>
+                                <td>
+                                    <input type="number" class="input-field" name="guaranteed_payments_k1_2022" value="5000" />
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <a href="javascript:void(0)" class="selfEmp-Sub-Btn" onclick="calculateTotalEarningsPartnership()">
+                        Submit
+                    </a>
+                    <div class="partnershipResult" style="display: none">
+                        <strong>2023</strong>
+                        <strong>Distributed K-1 Income</strong>
+                        <label>W-2 Income</label>
+                        <input type="number" disabled class="partnership-earning23" />
+                        <label>Distributions less Contributions</label>
+                        <input type="number" disabled class="partnership-DistributionsLessContributions23" />
+                        <label>Guaranteed Payments</label>
+                        <input type="number" disabled class="partnership-GuaranteedPayments23" />
+                        <label>K-1 Calculated Income</label>
+                        <input type="number" disabled class="partnership-K1CalculatedIncome23" />
+                        <label>Monthly Income</label>
+                        <input type="number" disabled class="partnership-MonthlyIncome23" />
+                        <label>Distributed K-1 Calculated Income</label>
+                        <input type="number" disabled class="partnership-DistributedK1CalculatedIncome23" />
+                        <label>Monthly Income</label>
+                        <input type="number" disabled class="partnership-DistributedMonthlyIncome23" />
+
+                        <strong>2022</strong>
+                        <strong>Distributed K-1 Income</strong>
+                        <label>W-2 Income</label>
+                        <input type="number" disabled class="partnership-earning22" />
+                        <label>Distributions less Contributions</label>
+                        <input type="number" disabled class="partnership-DistributionsLessContributions22" />
+                        <label>Guaranteed Payments</label>
+                        <input type="number" disabled class="partnership-GuaranteedPayments22" />
+                        <label>K-1 Calculated Income</label>
+                        <input type="number" disabled class="partnership-K1CalculatedIncome22" />
+                        <label>Monthly Income</label>
+                        <input type="number" disabled class="partnership-MonthlyIncome22" />
+                        <label>Distributed K-1 Calculated Income</label>
+                        <input type="number" disabled class="partnership-DistributedK1CalculatedIncome22" />
+                        <label>Monthly Income</label>
+                        <input type="number" disabled class="partnership-DistributedMonthlyIncome22" />
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- summary section .....  -->
+    <section>
+        <h2>Summary section</h2>
+        <p id="summary-section-intro"></p>
+        <p id="summary-section-employments"></p>
+        <p id="summary-section-duration"></p>
+        <p id="summary-section-gap"></p>
+        <p id="income-analysis-section"></p>
+    </section>
+
+    <!-- <section>
+        <p class="q-text">Upload loan application and all supporting documents for income.</p>
+        <strong class="strongSubHeading">Supporting documents for income</strong>
+        <label class="custom-file-upload">
+            <input type="file" />
+            <span> <i class="fa-solid fa-upload"></i> Upload W2s</span>
+        </label>
+        <label class="custom-file-upload">
+            <input type="file" />
+            <span> <i class="fa-solid fa-upload"></i> Upload Paystubs</span>
+        </label>
+        <label class="custom-file-upload">
+            <input type="file" />
+            <span> <i class="fa-solid fa-upload"></i> Upload Tax Returns</span>
+        </label>
+        <label class="custom-file-upload">
+            <input type="file" />
+            <span> <i class="fa-solid fa-upload"></i> Upload VOE</span>
+        </label>
+        <label class="custom-file-upload">
+            <input type="file" />
+            <span> <i class="fa-solid fa-upload"></i> Upload Year-end Paystubs</span>
+        </label>
+    </section> -->
+
+    <section>
+        <p>General condtitions</p>
+        <p>
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et
+            dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip
+            ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
+            fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia
+            deserunt mollit anim id est laborum.
+        </p>
+    </section>
+
+    <div style="text-align: center">
+        <div class="button" id="prev">
+            &larr; Previous
+        </div>
+        <div class="button" id="next">
+            Next &rarr;
+        </div>
+        <div class="button" id="submit">
+            Agree and send application
+        </div>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <script src="script.js"></script>
+
+    <script>
+
+        const employmentSummary = {
+            borrowerName: "",
+            gaps: [],
+            durations: [],
+            employers: [],
+            positions: [],
+            incomeType: {
+                salary: {
+                    totalMonths: 0,
+                    ytdGrossBasePay: 0,
+                    currentGrossBasePay: 0,
+                    endDateOfLastPaystub: new Date(),
+                },
+                hourly: {
+                    totalMonths: 0,
+                    ytdGrossBasePay: 0,
+                    currentGrossBasePay: 0,
+                    endDateOfLastPaystub: new Date(),
+                },
+                variable: {
+                    /**
+                     * @default default stable.
+                     * @param Statuses are stable, unstable, normalized.
+                     */
+                    status: "stable",
+                },
+                selfEmployed: {}
+            }
+        }
 
 
-let defaultIncomeType = "salary"; //default  . . . .
 
-// const employmentSummary = {
-//     borrowerName: "",
-//     gaps: new Set(),
-//     durations: new Set(),
-//     employers: [],
-//     positions: [],
-//     incomeType: {
-//         salary: {
-//             totalMonths: 0,
-//             ytdGrossBasePay: 0,
-//             currentGrossBasePay: 0,
-//             endDateOfLastPaystub: new Date(),
-//         },
-//         hourly: {
-//             totalMonths: 0,
-//             ytdGrossBasePay: 0,
-//             currentGrossBasePay: 0,
-//             endDateOfLastPaystub: new Date(),
-//         },
-//         variable: {
-//             /**
-//              * @default default stable.
-//              * @param Statuses are stable, unstable, normalized.
-//              */
-//             status: "stable",
-//         },
-//         selfEmployed: {}
-//     }
-// }
+        const incomeAnalysisTypes = {
+            base: (args) => {
+                return `Base pay was calculated by using the latest paystub as of [${moment(args.endDateOfLastPaystub).format("LL")}], taking the YTD income of [${args.currentGrossBasePay}] and dividing it by the number of months YTD which was [${args.totalMonths}]. This gave us a base pay of [].`;
+            },
+
+            stable: (args) => {
+                return `Variable pay was calculated by using YTD + 2023 and 2022. This income was considered stable as the variable income was consistent and did not have more than a 10% decrease from year to year. We were also able to provide evidence for 2 + years. We took the average of YTD, 2023, and 2022. This gave us variable pay of [monthly variable income]`;
+            },
+
+            unstable: (args) => {
+                return `Variable pay was calculated by using YTD + 2023 and 2022. This income was considered unstable
+as the variable income was inconsistent and had more than a 10% decrease from YTD to 2023.
+We were also able to provide evidence for 2 + years. The income was calculated by taking the
+lower of YTD, 2023, and 2022. Please make sure to have your underwriter give this the green light
+as its considered underwriter discretion, remembering the 4 Cs. This gave us variable pay of
+[monthly variable income].`
+            },
+
+            normalized: (args) => {
+                return `Variable pay was calculated by using YTD + 2023 and 2022. This income was considered
+normalized as the variable income was inconsistent and had more than a 10% decrease from
+2022 to 2023. However, YTD has recovered and is more in-line with 2022. We were also able to
+provide evidence for 2 + years. The income was calculated by taking the lower of YTD, 2023, and
+2022. Please make sure to have your underwriter give this the green light as its considered
+en discretion, remembering the 4 Cs. This gave us variable pay of [monthly variable
+income.`;
+            }
+        }
 
 
-// const incomeAnalysisTypes = {
-//     base: (args) => {
-//         return `Base pay was calculated by using the latest paystub as of [${moment(args.endDateOfLastPaystub).format("LL")}], taking the YTD income of [${args.currentGrossBasePay}] and dividing it by the number of months YTD which was [${args.totalMonths}]. This gave us a base pay of [].`;
-//     },
-
-//     stable: (args) => {
-//         return `Variable pay was calculated by using YTD + 2023 and 2022. This income was considered stable as the variable income was consistent and did not have more than a 10% decrease from year to year. We were also able to provide evidence for 2 + years. We took the average of YTD, 2023, and 2022. This gave us variable pay of [monthly variable income]`;
-//     },
-
-//     unstable: (args) => {
-//         return `Variable pay was calculated by using YTD + 2023 and 2022. This income was considered unstable
-// as the variable income was inconsistent and had more than a 10% decrease from YTD to 2023.
-// We were also able to provide evidence for 2 + years. The income was calculated by taking the
-// lower of YTD, 2023, and 2022. Please make sure to have your underwriter give this the green light
-// as its considered underwriter discretion, remembering the 4 Cs. This gave us variable pay of
-// [monthly variable income].`
-//     },
-
-//     normalized: (args) => {
-//         return `Variable pay was calculated by using YTD + 2023 and 2022. This income was considered
-// normalized as the variable income was inconsistent and had more than a 10% decrease from
-// 2022 to 2023. However, YTD has recovered and is more in-line with 2022. We were also able to
-// provide evidence for 2 + years. The income was calculated by taking the lower of YTD, 2023, and
-// 2022. Please make sure to have your underwriter give this the green light as its considered
-// en discretion, remembering the 4 Cs. This gave us variable pay of [monthly variable
-// income.`;
-//     }
-// }
-
-/**
- * @description Added an unemployment gap 
- * feature. Making changes to uncommitted code 
- * might be risky.
- * 
- * @todo Remove dead commented code  . . .
- * 
- * Utilized moment.js [difference] function
- * to calculate the gap and duration . . 
- * 
- * https://momentjs.com/docs/#/displaying/difference/
- */
-function checkEmploymentHistory() {
-    let totalEmploymentMonths = 0;
-    currentEmploymentDates = [];
-
-    let duration = 0;
-    // let gap = 0;
-    // let totalGap = 0
-    // let s = new Set(); // new Set()
-    // let e = new Set();
-
-    // Function to calculate months between two dates
-    function calculateMonths(start, end, { withGap = false } = {}) {
-        let startDate = moment(start);
-        let endDate = moment(end);
-
-        // s.add(start);
-        // e.add(end);
-
-        duration = Math.round(endDate.diff(startDate, "months", true));
-        return duration;
-
-        // if (withGap) {
-        //     let startDate = [...s];
-        //     let endDate = [...e];
-        //     gap = Math.abs(Math.round(moment(endDate[endDate.length - 2]).diff(moment(startDate[startDate.length - 1]), "months")));
 
 
-        //     if (gap > 0) {
-        //         const a = startDate[startDate.length - 1];
-        //         const b = endDate[endDate.length - 2];
-        //         const startOfTheMonth = moment(b).add(1, 'day').format("l");
-        //         const endOfTheMonth = moment(a).subtract(1, 'day').format("l");
+        const summarySectionIntro = document.getElementById("summary-section-intro");
+        const summarySectionEmployments = document.getElementById("summary-section-employments");
+        const summarySectionDuration = document.getElementById("summary-section-duration");
+        const summarySectionGaps = document.getElementById("summary-section-gap");
+        const incomeAnalysisSection = document.getElementById("income-analysis-section");
 
-        //         // employmentSummary.gaps.add(JSON.stringify({ gap, startOfTheMonth, endOfTheMonth }));
-        //         // console.log("GAP VALUES", moment(a).subtract(1, 'day').format("l"), moment(b).add(1, 'day').format("l"));
+        // let e = new Set();
+        let duration = 0;
+        let totalMonths = 0;
+        let totalGap = 0;
+
+        let {
+            borrowerName,
+            employers,
+            positions,
+            durations,
+            gaps,
+            incomeType
+        } = employmentSummary;
+
+
+        const calculateTotalMonths = (start, end) => {
+            let startDate = moment(start);
+            let endDate = moment(end);
+
+            return Math.round(endDate.diff(startDate, "months", true));
+        }
+
+        let s = new Set();
+        const calculateGaps = (start, end, isCurrentJob) => {
+            let startDate = moment(start);
+            let endDate = moment(end);
+            let gapInfo = null;
+            let gap = 0;
+            let isInvalid = false;
+
+            s.add(JSON.stringify({ startDate, endDate, isCurrentJob }));
+
+            let dates = [...s].map(e => JSON.parse(e)).sort((a, b) => moment(a.startDate).diff(b.startDate));
+            console.log("LENGTH", dates.length);
+            for (let i = 0; i < dates.length - 1; i++) {
+                console.log("loop index", i);
+
+                console.log((dates[i].endDate > dates[i + 1].startDate) && dates[i].isCurrentJob);
+                if ((dates[i].endDate > dates[i + 1].startDate) && dates[i].isCurrentJob) {
+                    console.log("INVALID");
+                    isInvalid = true;
+                }
+
+                if (dates[i].endDate > dates[i + 1].startDate && !dates[i].isCurrentJob) {
+                    isInvalid = false;
+                    console.log("LESSER 2", moment(dates[i + 1].startDate).diff(moment(dates[i].endDate), "months"));
+                    gap = Math.abs(Math.round(moment(dates[i + 1].startDate).diff(moment(dates[i].endDate), "months")));
+                }
+
+                if (dates[i].endDate < dates[i + 1].startDate) {
+                    isInvalid = false;
+                    console.log("LESSER 1", moment(dates[i].endDate).diff(moment(dates[i + 1].startDate), "months"));
+                    gap = Math.abs(Math.round(moment(dates[i].endDate).diff(moment(dates[i + 1].startDate), "months")));
+                }
+
+
+                console.log("Sorted", dates);
+
+                if (!isInvalid) {
+                    if (gap > 0) {
+                        let a;
+                        let b;
+                        console.log("ISINVALID ?? ", isInvalid);
+                        if (dates[i].endDate < dates[i + 1].startDate) {
+                            console.log("LESSER GAP 1");
+                            a = dates[i + 1].startDate;
+                            b = dates[i].endDate;
+                        } else {
+                            console.log("LESSER GAP 2");
+                            a = dates[i].startDate;
+                            b = dates[i + 1].endDate;
+                        }
+
+                        console.log("GAP START", a);
+                        console.log("GAP END", b);
+                        console.log("MOMENT", gap);
+
+                        const startOfTheMonth = moment(b).add(1, 'day').format("l");
+                        const endOfTheMonth = moment(a).subtract(1, 'day').format("l");
+
+                        console.log("GAP START OF MONTH", startOfTheMonth);
+                        console.log("GAP END OF MONTH", endOfTheMonth);
+                        gapInfo = {
+                            gap,
+                            startOfTheMonth,
+                            endOfTheMonth
+                        }
+                    }
+                }
+            }
+            return gapInfo;
+        }
+
+        // function calculateMonths(start, end, { withGap = false, isCurrentJob = false } = {}) {
+        //     let startDate = moment(start);
+        //     let endDate = moment(end);
+        //     let gapInfo = {};
+        //     let gap = 0;
+
+        //     s.add(JSON.stringify({ startDate, endDate, isCurrentJob }));
+
+        //     // console.log("Unsorted", [...s]);
+        //     // console.log("Sorted", [...s].map(e => JSON.parse(e)).sort((a, b) => moment(a.startDate).diff(b.startDate)));
+
+        //     duration = Math.round(endDate.diff(startDate, "months", true));
+
+        //     if (withGap) {
+
+        //         let dates = [...s].map(e => JSON.parse(e)).sort((a, b) => moment(a.startDate).diff(b.startDate));
+        //         console.log("LENGTH", dates.length);
+        //         for (let i = 0; i < dates.length - 1; i++) {
+        //             console.log("loop index", i);
+
+        //             console.log((dates[i].endDate > dates[i + 1].startDate) && dates[i].isCurrentJob);
+        //             if ((dates[i].endDate > dates[i + 1].startDate) && dates[i].isCurrentJob) {
+        //                 console.log("INVALID");
+        //                 return;
+        //             }
+
+        //             if (dates[i].endDate < dates[i + 1].startDate) {
+        //                 console.log("LESSER 1", moment(dates[i].endDate).diff(moment(dates[i + 1].startDate), "months"));
+        //                 gap = Math.abs(Math.round(moment(dates[i].endDate).diff(moment(dates[i + 1].startDate), "months")));
+        //             } else {
+        //                 console.log("LESSER 2", moment(dates[i + 1].startDate).diff(moment(dates[i].endDate), "months"));
+        //                 gap = Math.abs(Math.round(moment(dates[i + 1].startDate).diff(moment(dates[i].endDate), "months")));
+        //             }
+        //             console.log("Sorted", dates);
+
+        //             if (gap > 0) {
+        //                 let a;
+        //                 let b;
+
+        //                 if (dates[i].endDate < dates[i + 1].startDate) {
+        //                     console.log("LESSER GAP 1");
+        //                     a = dates[i + 1].startDate;
+        //                     b = dates[i].endDate;
+        //                 } else {
+        //                     console.log("LESSER GAP 2");
+        //                     a = dates[i].startDate;
+        //                     b = dates[i + 1].endDate;
+        //                 }
+
+        //                 console.log("GAP START", a);
+        //                 console.log("GAP END", b);
+        //                 console.log("MOMENT", gap);
+
+        //                 const startOfTheMonth = moment(b).add(1, 'day').format("l");
+        //                 const endOfTheMonth = moment(a).subtract(1, 'day').format("l");
+
+        //                 console.log("GAP START OF MONTH", startOfTheMonth);
+        //                 console.log("GAP END OF MONTH", endOfTheMonth);
+        //                 gapInfo = {
+        //                     gap,
+        //                     startOfTheMonth,
+        //                     endOfTheMonth,
+        //                 }
+        //             }
+
+        //         }
+
+
+
+
+        //         // for (let i = (dates.length - 1 && dates.length > 1); i >= 0; i--) {
+        //         //     // let endDate = [...e].map(e => JSON.parse(e));
+        //         //     console.log("loop index", i);
+        //         //     gap = Math.abs(Math.round(moment(dates[i].endDate).diff(moment(dates[i - 1].startDate), "months")));
+        //         //     console.log("Sorted", dates);
+        //         //     console.log("INDEX FOR START", i - 1);
+        //         //     console.log("INDEX FOR END", i);
+
+        //         //     console.log("GAP START", dates[i - 1].startDate);
+        //         //     console.log("GAP END", dates[i].endDate);
+        //         //     console.log("MOMENT", moment(dates[i].endDate).diff(moment(dates[i - 1].startDate), "months"));
+
+        //         //     console.log(gap);
+        //         //     if (gap > 0) {
+        //         //         const a = dates[i - 1].startDate;
+        //         //         const b = dates[i].endDate;
+        //         //         const startOfTheMonth = moment(b).add(1, 'day').format("l");
+        //         //         const endOfTheMonth = moment(a).subtract(1, 'day').format("l");
+        //         //         gapInfo = {
+        //         //             gap,
+        //         //             startOfTheMonth,
+        //         //             endOfTheMonth,
+        //         //         }
+        //         //     }
+
+        //         // }
         //     }
+        //     return { duration, gapInfo };
         // }
 
-        // return { duration, gap };
 
 
-        // const diffInMilliseconds = endDate - startDate;
-        // return diffInMilliseconds / (1000 * 60 * 60 * 24 * 30.44); // Average number of days in a month
-    }
+        $(document).ready(function () {
+            var base_color = "rgb(230,230,230)";
+            var active_color = "#1ab188";
 
-    // Function to create additional employment block
-    function createAdditionalEmploymentBlock() {
-        let allFilled = true;
-        document.querySelectorAll('.additionalEmploymentBlock').forEach(block => {
-            const startDateInput = block.querySelector('.additionalStartDate').value;
-            const endDateInput = block.querySelector('.additionalEndDate').value;
-            const additionalEmployerName = block.querySelector('.additionalEmployerName').value;
-            const additionalPosition = block.querySelector('.additionalPosition').value;
+            var child = 1;
+            var length = $("section").length - 1;
+            $("#prev").addClass("disabled");
+            $("#submit").addClass("disabled");
 
-            if (startDateInput.length < 1 || endDateInput.length < 1 || additionalEmployerName.length < 1 || additionalPosition.length < 1) {
-                allFilled = false;
-                return;
-            }
-        });
+            $("section").not("section:nth-of-type(1)").hide();
+            $("section").not("section:nth-of-type(1)").css("transform", "translateX(100px)");
 
-        if (allFilled) {
-            schoolTogl.style.display = "block";
-            const additionalEmploymentBlock = document.createElement('div');
-            additionalEmploymentBlock.className = 'additionalEmploymentBlock';
-            additionalEmploymentBlock.innerHTML = `
-            <strong class="strongSubHeading">Additional Employment</strong>
-            <input type="text" class="additionalEmployerName" placeholder="Employer Name" onblur="ValidateInputs(this,event)"  />
-            <input type="text" class="additionalPosition" placeholder="Position" onblur="ValidateInputs(this,event)"  />
-            <div style="display: flex; align-items: center;">
-                <input type="checkbox" name="" class="CurrenPositionCheck"
-                    style="width: 17px; height: 20px; margin-right: 10px;" onchange="currentJob(this)" >
-                <label for="CurrenPositionCheck">Current Position</label>
-            </div>
-            <input onfocus="(this.type='date')" onblur="ValidateInputs(this,event)"  class="additionalStartDate" placeholder="Start Date"  />
-            <input onfocus="(this.type='date')" onblur="ValidateInputs(this,event)"  class="additionalEndDate" placeholder="End Date" />
-            <p class="errorMessage"></p>
-            `;
-            document.getElementById('additionalEmploymentContainer').appendChild(additionalEmploymentBlock);
-        }
-    }
+            var svgWidth = length * 200 + 24;
+            $("#svg_wrap").html(
+                '<svg version="1.1" id="svg_form_time" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 ' +
+                svgWidth +
+                ' 24" xml:space="preserve"></svg>'
+            );
 
-    // Get current date
-    const currentDate = new Date();
-
-
-    function calculateTotalEmploymentMonths() {
-        let totalMonths = totalEmploymentMonths; // Start with current employment duration
-        const additionalBlocks = Array.from(document.querySelectorAll('.additionalEmploymentBlock'));
-        additionalBlocks.forEach((block, index) => {
-            const startDateInput = block.querySelector('.additionalStartDate').value;
-            const endDateInput = block.querySelector('.additionalEndDate').value;
-            const isCurrentJob = block.querySelector('.CurrenPositionCheck').checked;
-
-            if (startDateInput) {
-                const startDate = new Date(startDateInput);
-                const endDate = isCurrentJob ? currentDate : new Date(endDateInput);
-                const duration = calculateMonths(startDate, endDate);
-                totalMonths += duration;
-
-                // employmentSummary.durations.add(JSON.stringify({ totalMonths, startDate, endDate }));
-                // console.log("Total Months", totalMonths);
-
-                if (isCurrentJob) {
-                    currentEmploymentDates.push({ startDate, endDate });
-                }
-
-                // if (index >= 1) {
-                // calculateMonths(startDate, endDate, { withGap: true });
-                // totalGap += gap;
-                // console.log("Gap", totalGap);
-
-                // if (totalGap > 0) {
-                //     const a = startDate[startDate.length - 1];
-                //     const b = endDate[endDate.length - 2];
-                //     const startOfTheMonth = moment(b).add(1, 'day').format("ll");
-                //     const endOfTheMonth = moment(a).subtract(1, 'day').format("ll");
-                //     employmentSummary.gaps.add(JSON.stringify({ totalGap, startOfTheMonth, endOfTheMonth }));
-                //     console.log("GAP VALUES", moment(a).subtract(1, 'day').format("ll"), moment(b).add(1, 'day').format("ll"));
-                // }
-
-                // }
-            }
-        });
-
-        // console.log("calculateTotalEmploymentMonths");
-        return totalMonths;
-    }
-
-    function validateAndContinue() {
-        totalEmploymentMonths = calculateTotalEmploymentMonths();
-        if (totalEmploymentMonths < 24) {
-            createAdditionalEmploymentBlock();
-        } else {
-            schoolTogl.style.display = "none";
-        }
-    }
-
-    validateAndContinue();
-    return totalEmploymentMonths;
-}
-
-
-/**
- * @note This code is highly problemtic
- * because sometimes it does not work
- * and gets difficult to further add new
- * features....Addding feature such as the summary
- * causes it to break something and returns empty values.....
- * 
- * I have been trying to add feature and fix the issue
- * but still no luck that where does the problem lies. . .
- * we must have to fix and refactor all this file . . . 
- */
-function ValidateInputs(Input, event) {
-    let flag = true;
-    document.querySelectorAll('.additionalEmploymentBlock').forEach(block => {
-        const startDateInput = block.querySelector('.additionalStartDate').value;
-        const borrowerName = block.querySelector(".additionalBorrowerName")?.value;
-        const endDateInput = block.querySelector('.additionalEndDate').value;
-        errorMessage = block.querySelector('.errorMessage');
-        const startDate = new Date(startDateInput);
-        const endDate = new Date(endDateInput);
-        const currentDate = new Date();
-
-        if (startDate > currentDate) { // Check if start date is greater than current date
-            errorMessage.style.display = "block";
-            errorMessage.innerText = "Start date cannot be in the future!";
-            flag = false;
-            return;
-        } else if (endDate < startDate) { // Check if end date is lesser than start date
-            errorMessage.style.display = "block";
-            errorMessage.innerText = "End date cannot be before start date!";
-            flag = false;
-            return;
-        } else {
-            errorMessage.style.display = "none";
-            errorMessage.innerText = "";
-            flag = true;
-        }
-    });
-
-    if (flag) {
-        /**
-         * @note This function was not working as expected
-         * and after some debugging i have removed some code
-         * which were not being executed because the values
-         * were not being collected, currently the code works
-         * fine but still i dont know what i might have break 
-         * @jamal Further investigation is required to validate 
-         * this process and code according to requirements, otherwise 
-         * remove the below unecessary commented code .. . . 
-         */
-        const ParentWraper = document.getElementById('additionalEmploymentContainer');
-        const children = ParentWraper.children;
-        const parentBox = event.target.parentElement;
-        const currentIndex = Array.from(parentBox.parentNode.children).indexOf(parentBox);
-        // checkEmploymentHistory();
-        const NumberOfMonth = checkEmploymentHistory();
-        console.log("Curent index", currentIndex, "Children", children.length);
-        if (NumberOfMonth > 24) {
-            // if (children.length > currentIndex + 1) {
-            // for (let i = currentIndex + 1; i < children.length; i++) {
-            for (let i = currentIndex; i < children.length; i++) {
-                // for (let i = 0; i < children.length; i++) {
-                const block = children[i];
-                const startDateInput = block.querySelector('.additionalStartDate').value;
-                const endDateInput = block.querySelector('.additionalEndDate').value;
-                const additionalEmployerName = block.querySelector('.additionalEmployerName').value;
-                const additionalPosition = block.querySelector('.additionalPosition').value;
-
-                if (startDateInput.length < 1 && endDateInput.length < 1 && additionalEmployerName.length < 1 && additionalPosition.length < 1) {
-                    block.remove();
-                }
-            }
-            // }
-        }
-    }
-}
-
-function toggleSchoolFields(checkbox) {
-    const employmentBlocks = document.querySelectorAll('.additionalEmploymentBlock');
-    const employmentBlock = employmentBlocks[employmentBlocks.length - 1];
-    const schoolFieldsTemplate = document.getElementById('schoolFieldsTemplate').content.cloneNode(true);
-
-    if (checkbox.checked) {
-        // Hide employment block and insert school fields
-        employmentBlock.style.display = 'none';
-        employmentBlock.insertAdjacentElement('afterend', schoolFieldsTemplate.firstElementChild);
-    } else {
-        // Show employment block and remove school fields
-        employmentBlock.style.display = 'block';
-        const nextElement = employmentBlock.nextElementSibling;
-        if (nextElement && nextElement.classList.contains('schoolFields')) {
-            nextElement.remove();
-        }
-    }
-}
-
-function currentJob(checkbox) {
-    const currentDate = new Date();
-    const year = currentDate.getFullYear();
-    let month = currentDate.getMonth() + 1; // Months are zero-indexed
-    let day = currentDate.getDate();
-
-    // Ensure month and day are two digits
-    month = month < 10 ? '0' + month : month;
-    day = day < 10 ? '0' + day : day;
-
-    const formattedDate = year + '-' + month + '-' + day;
-
-    if (checkbox.checked) {
-        const endDateInput = checkbox.closest('.additionalEmploymentBlock').querySelector('.additionalEndDate');
-        endDateInput.value = formattedDate;
-        endDateInput.type = 'hidden';
-        endDateInput.disabled = true; // Optionally disable the end date field if it's a current job
-        currentEmployementExists = true;
-    } else {
-        const endDateInput = checkbox.closest('.additionalEmploymentBlock').querySelector('.additionalEndDate');
-        endDateInput.value = ""; // Reset end date value if the checkbox is unchecked
-        endDateInput.type = 'text';
-        endDateInput.disabled = false; // Enable the end date field if it's not a current job
-        currentEmployementExists = false;
-    }
-
-    checkEmploymentHistory();
-}
-
-function checkDateRange() {
-    document.querySelectorAll('.schoolFields').forEach(block => {
-        const startDateInput = block.querySelector('.additionalStartDate').value;
-        const endDateInput = block.querySelector('.additionalEndDate').value;
-        errorMessage = block.querySelector('.errorMessage');
-        const startDate = new Date(startDateInput);
-        const endDate = new Date(endDateInput);
-        const currentDate = new Date();
-
-        if (startDate > currentDate) { // Check if start date is greater than current date
-            errorMessage.style.display = "block";
-            errorMessage.innerText = "Start date cannot be in the future!";
-        } else if (endDate < startDate) { // Check if end date is lesser than start date
-            errorMessage.style.display = "block";
-            errorMessage.innerText = "End date cannot be before start date!";
-        } else {
-            errorMessage.style.display = "none";
-            errorMessage.innerText = "";
-        }
-    });
-}
-
-// The Employemnent Information Script End here 
-
-
-// Source of Income section starts here 
-let SourceOfIncomeSelect = document.getElementById('SourceOfIncomeSelect');
-let salarySection = document.getElementById('salarySection');
-let hourlySection = document.getElementById('hourlySection');
-let variableSection = document.getElementById('variableSection');
-let selfEmployedSection = document.getElementById('selfEmployedSection');
-function sourceOfIncome() {
-    if (SourceOfIncomeSelect.value === 'Salary') {
-        salarySection.style.display = 'block';
-        hourlySection.style.display = 'none';
-        variableSection.style.display = 'none';
-        selfEmployedSection.style.display = 'none';
-    } else if (SourceOfIncomeSelect.value === 'Hourly') {
-        hourlySection.style.display = 'block';
-        salarySection.style.display = 'none';
-        variableSection.style.display = 'none';
-        selfEmployedSection.style.display = 'none';
-
-    }
-    else if (SourceOfIncomeSelect.value === 'Variable income') {
-        hourlySection.style.display = 'none';
-        salarySection.style.display = 'none';
-        selfEmployedSection.style.display = 'none';
-        variableSection.style.display = 'block';
-
-    }
-    else if (SourceOfIncomeSelect.value === 'Self-employed') {
-        hourlySection.style.display = 'none';
-        salarySection.style.display = 'none';
-        variableSection.style.display = 'none';
-        selfEmployedSection.style.display = 'block';
-    }
-
-    /**
-     * Not much elegant code, regex would solve the multi delimter 
-     * problem here..
-     * @todo refactor and use regex . . . .
-     */
-    defaultIncomeType = SourceOfIncomeSelect.value.split(" ").join(" ").split("-").join(" ").split(" ")[0].toLowerCase();
-    console.log(defaultIncomeType);
-}
-
-// Source of Income section starts here 
-
-// The Salary calculation Starts Here 
-
-let totalSaleryDays = 0;
-let Income = 0;
-let validateIncome = 0;
-var filledMessage = '';
-var acceptedDays = [7, 14, 15, 16, 28, 29, 30, 31];
-var getMonth = '';
-let BoxMaker = true;
-let selectedMultiplier = 26;
-let selectedFrequency = 'bi-weekly';
-var allSalleryFilled = true;
-var allHourlyFilled = true;
-var newIncome = '';
-var newmultipier = '';
-var consoleData = '';
-let allMonths = [];
-let firstMultiplier = [];
-let firstfrequency = [];
-
-
-function CalcMonthsYTD(convertEndDate) {
-    const wholeMonths = convertEndDate.getMonth();
-
-    const dayOfMonth = convertEndDate.getDate();
-
-    const totalDaysInMonth = new Date(convertEndDate.getFullYear(), convertEndDate.getMonth() + 1, 0).getDate();
-
-    const fractionOfMonth = dayOfMonth / totalDaysInMonth;
-
-    const monthsYTD = wholeMonths + fractionOfMonth;
-
-    return monthsYTD;
-}
-
-
-function calculateDays(startDate, endDate) {
-    const diffInMilliseconds = endDate - startDate;
-    return Math.floor(diffInMilliseconds / (1000 * 60 * 60 * 24)) + 1;
-}
-
-function createAdditionalSalleryBlock() {
-    const additionalSalleryBlock = document.createElement('div');
-    additionalSalleryBlock.className = 'SalaryBlocks';
-    additionalSalleryBlock.innerHTML = `
-        <strong class="strongSubHeading" style="margin-botom: 10px;">Salary</strong>
-        <label for="">Pay Period Start Date </label>
-        <input  onfocus="(this.type='date')"
-            onblur="validateSalaryInputs(this,event)" class="SalaryStartDate" />
-        <label for="">Pay Period End Date</label>
-        <input  onfocus="(this.type='date')"
-            onblur="validateSalaryInputs(this,event)" class="SalaryEndDate" />
-            <label for="">Current Gross Base Pay</label>
-        <input type="number"  class="currentGrossPay"
-            onblur="validateSalaryInputs(this,event)" />
-        <label for="">YTD Gross Base Pay</label>
-        <input type="number"  class="YTDGrossPays"
-            onblur="validateSalaryInputs(this,event)" />
-        <div class="consoleData" style="display: none;">    
-        <label for="">Validated Income</label>
-        <input type="hidden" class="newIncome">
-        <label for="">Multiplier</label>
-        <input type="hidden" class="newmultipier">
-    </div>
-        <p class="filledMessage"></p>
-   
-    `;
-    document.getElementById('salleryBlockContainer').appendChild(additionalSalleryBlock);
-}
-function calculateTotalSalleryDays() {
-    let totalDays = 0;
-    const salaryBlocks = document.querySelectorAll('.SalaryBlocks');
-    salaryBlocks.forEach(block => {
-        const startDateInput = block.querySelector('.SalaryStartDate').value;
-        const endDateInput = block.querySelector('.SalaryEndDate').value;
-        if (startDateInput && endDateInput) {
-            const startDate = new Date(startDateInput);
-            const endDate = new Date(endDateInput);
-
-            totalDays += calculateDays(startDate, endDate);
-        }
-    });
-
-    return totalDays;
-}
-function areDatesContiguous() {
-    const salaryBlocks = document.querySelectorAll('.SalaryBlocks');
-    for (let i = 0; i < salaryBlocks.length - 1; i++) {
-        const currentEndDate = new Date(salaryBlocks[i].querySelector('.SalaryEndDate').value);
-        const nextStartDate = new Date(salaryBlocks[i + 1].querySelector('.SalaryStartDate').value);
-        const dayAfterCurrentEndDate = new Date(currentEndDate);
-        dayAfterCurrentEndDate.setDate(currentEndDate.getDate() + 1);
-        if (dayAfterCurrentEndDate.getTime() !== nextStartDate.getTime()) {
-            return false;
-        }
-    }
-    return true;
-}
-function flagedforvalidation(flag, display, message) {
-    BoxMaker = flag;
-    filledMessage.style.display = display;
-    filledMessage.innerText = message;
-}
-function validateSalleryAndContinue() {
-
-    totalSaleryDays = calculateTotalSalleryDays();
-    var currentGrossPay = [];
-    document.querySelectorAll('.currentGrossPay').forEach(input => {
-        currentGrossPay.push(input.value);
-    });
-    const firstValue = currentGrossPay[0];
-    const allValuesSame = currentGrossPay.every(item => item === firstValue);
-    if (!allValuesSame) {
-        flagedforvalidation(false, "block", "Not all values are the same in currentGrossPay");
-        return;
-    } else {
-        flagedforvalidation(true, "none", "");
-    }
-    var eachPeriodinDays = [];
-    const salaryBlocks = document.querySelectorAll('.SalaryBlocks');
-    salaryBlocks.forEach(block => {
-        const startDateInput = block.querySelector('.SalaryStartDate').value;
-        const endDateInput = block.querySelector('.SalaryEndDate').value;
-        if (startDateInput && endDateInput) {
-            const startDate = new Date(startDateInput);
-            const endDate = new Date(endDateInput);
-            const Days = calculateDays(startDate, endDate);
-            eachPeriodinDays.push(Math.trunc(Days));
-
-        }
-    });
-    const firstPeriod = eachPeriodinDays[0];
-    const checkAcceptedValue = acceptedDays.some(item => item === firstPeriod);
-    if (!checkAcceptedValue) {
-        flagedforvalidation(false, "block", "Period Should be in these range of days : 7,14,15,16,30,31")
-        return;
-
-    } else {
-        flagedforvalidation(true, "none", "")
-    }
-    const AllPeriodsSame = eachPeriodinDays.every(item => item === firstPeriod);
-    if (!AllPeriodsSame) {
-        if (firstPeriod === 15) {
-            if (eachPeriodinDays.some(item => item === 16 || item === 14)) {
-                flagedforvalidation(true, "none", "");
-            } else {
-                flagedforvalidation(false, "block", "pay period Should be same in each period")
-                return;
+            function makeSVG(tag, attrs) {
+                var el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+                for (var k in attrs) el.setAttribute(k, attrs[k]);
+                return el;
             }
 
-        }
-        else if (firstPeriod === 16) {
-            if (eachPeriodinDays.some(item => item === 15 || item === 14)) {
-                flagedforvalidation(true, "none", "");
-            } else {
-                flagedforvalidation(false, "block", "pay period Should be same in each period")
-                return;
-            }
-        }
-
-        else {
-            flagedforvalidation(false, "block", "pay period Should be same in each period")
-            return;
-        }
-
-    } else {
-        flagedforvalidation(true, "none", "");
-    }
-
-    if (!areDatesContiguous()) {
-        flagedforvalidation(false, "block", "All pay periods should be in a row without gaps.")
-        return;
-    }
-
-    if (BoxMaker) {
-        if (totalSaleryDays < 28) {
-            createAdditionalSalleryBlock();
-        }
-    }
-
-}
-
-let EndDateOfHourly;
-function validateSalaryInputs(Input, event) {
-    allSalleryFilled = true;
-    document.querySelectorAll('.SalaryBlocks').forEach(block => {
-        const startDateInput = block.querySelector('.SalaryStartDate').value;
-        const endDateInput = block.querySelector('.SalaryEndDate').value;
-        const GrossPay = block.querySelector('.currentGrossPay').value;
-        const YTDGross = block.querySelector('.YTDGrossPays').value;
-
-
-
-        newIncome = block.querySelector('.newIncome');
-        newmultipier = block.querySelector('.newmultipier');
-        consoleData = block.querySelector('.consoleData');
-        const convertToDate = new Date(startDateInput);
-        getMonth = convertToDate.getMonth() + 1;
-        filledMessage = block.querySelector('.filledMessage');
-        const startDate = new Date(startDateInput);
-        const endDate = new Date(endDateInput);
-        EndDateOfHourly = new Date(endDateInput);
-
-        /** 
-         * @note to @jamal
-         * without parenthesis??? is this being referenced by some function as args???????
-         * Kindly check it please, that if it is not being referenced 
-         * add paranthesis or it might cause undefine behaviour . . .
-         */
-        const currentDate = new Date;
-
-
-        employmentSummary.incomeType.salary.endDateOfLastPaystub = endDate;
-        employmentSummary.incomeType.salary.currentGrossBasePay = GrossPay;
-        employmentSummary.incomeType.salary.ytdGrossBasePay = YTDGross;
-
-        if (startDate > currentDate) { // Check if start date is greater than current date
-            allSalleryFilled = false;
-            filledMessage.style.display = "block";
-            filledMessage.innerText = "Start date cannot be in the future!";
-            return;
-        }
-        else if (endDate <= startDate) { // Check if end date is lesser than start date
-            allSalleryFilled = false;
-            filledMessage.style.display = "block";
-            filledMessage.innerText = "End date cannot be before start date!";
-            return;
-        }
-        else {
-            allSalleryFilled = true;
-            filledMessage.style.display = "none";
-            filledMessage.innerText = "";
-        }
-
-        if (!startDateInput || !endDateInput || !GrossPay || !YTDGross) {
-            allSalleryFilled = false;
-        }
-        else {
-
-            const startDate = new Date(startDateInput);
-            const endDate = new Date(endDateInput);
-            const days = calculateDays(startDate, endDate);
-            let truncDays = Math.trunc(days);
-            let multiplier = 0;
-            allMonths.push(convertToDate.getMonth());
-
-
-
-            console.log(allMonths);
-            const allFeb = allMonths[0] === 1 ? true : false;
-            const isFebruary = convertToDate.getMonth() === 1;
-            const firstDayOfFebruary = new Date(convertToDate.getFullYear(), 1, 1);
-            const isSundayOrMonday = firstDayOfFebruary.getDay() === 0 || firstDayOfFebruary.getDay() === 1;
-            const checkCondition = isFebruary && truncDays === 14 && isSundayOrMonday && allFeb;
-            switch (truncDays) {
-                case 7:
-                    multiplier = 52;
-                    break;
-                case 14:
-                    multiplier = selectedMultiplier;
-                    break;
-                case 15:
-                case 16:
-                    multiplier = checkCondition ? selectedMultiplier : 24;
-                    break;
-                default:
-                    multiplier = 1;
-                    break;
-            }
-            firstMultiplier.push(multiplier);
-            if (checkCondition) {
-                if (document.querySelector('.pIntenvalBox').style.display !== 'block') {
-                    document.querySelector('.pIntenvalBox').style.display = 'block';
-                    allSalleryFilled = false;
-                    return;
-                }
-            } else {
-                document.querySelector('.pIntenvalBox').style.display = 'none';
-            }
-            if (truncDays >= 28 && truncDays <= 31) {
-                validateIncome = GrossPay ? (GrossPay) : 0;
-            } else {
-                validateIncome = GrossPay ? (GrossPay * firstMultiplier[0]) / 12 : 0;
-            }
-            let monthsYTD = CalcMonthsYTD(EndDateOfHourly);
-
-            employmentSummary.incomeType.salary.totalMonths = monthsYTD;
-
-            consoleData.style.display = "block";
-            newIncome.value = validateIncome;
-            newIncome.type = 'text';
-            newIncome.disabled = true;
-            newmultipier.value = firstMultiplier[0];
-            newmultipier.type = 'text';
-            newmultipier.disabled = true;
-
-
-        }
-    });
-
-
-    if (allSalleryFilled) {
-        validateSalleryAndContinue();
-    }
-
-}
-function updateMultiplier(selectElement) {
-    const selectedValue = selectElement.value;
-    firstMultiplier = [];
-    if (selectedValue === "Bi-Weekly") {
-        selectedMultiplier = 26;
-        firstMultiplier.push(selectedMultiplier);
-    } else if (selectedValue === "2x Per Month") {
-        selectedMultiplier = 24;
-        firstMultiplier.push(selectedMultiplier);
-    }
-    validateSalaryInputs();
-}
-
-// The Salary calculation Starts Here 
-
-// The Hourly calculation Starts Here 
-let hourlyConsole = '';
-let checkHourlyRateField = '';
-let paychecksYTDField = '';
-let expectedYTDHourField = '';
-let incomeField = '';
-var yearStart = '';
-let renderResultsCalled = false;
-var reasonBox = document.querySelector('.reasonBox');
-
-function createAdditionalHourlyBlock() {
-    const additionalHourlyBlock = document.createElement('div');
-    additionalHourlyBlock.className = 'hourlyBlocks';
-    additionalHourlyBlock.innerHTML = `
-    <strong class="strongSubHeading" style="margin-bottom: 10px;">Hourly</strong>
-    <label for="">Pay Period Start Date </label>
-    <input  onfocus="(this.type='date')" onblur="validateHourlyInputs(this,event)" class="hourlyStartDate" />
-    <label for="">Pay Period End Date</label>
-    <input  onfocus="(this.type='date')" onblur="validateHourlyInputs(this,event)" class="hourlyEndDate" />
-    <label for="">Hourly Rate</label>
-    <input type="number"  class="hourlyRate" onblur="validateHourlyInputs(this,event)" />
-    <label for="">Current Hours Base Pay (include Holiday, Sick, PTO)</label>
-    <input type="number"  class="currentHourBasePay" onblur="validateHourlyInputs(this,event)" />
-    <label for="">Current Gross Base Pay (include Holiday, Sick, PTO)</label>
-    <input type="number"  class="currentGrossBasePay-hourly" onblur="validateHourlyInputs(this,event)" />
-    <label for="">YTD Hours (include Holiday, Sick, PTO)</label>
-    <input type="number"  class="YTDhour-hourly" onblur="validateHourlyInputs(this,event)" />
-    <label for="">YTD Gross Base Pay (include Holiday, Sick, PTO)</label>
-    <input type="number"  class="ytdGrossBasePay-hourly" onblur="validateHourlyInputs(this,event)" />
-    <div class="hourlyConsole" style="display: none;">
-                <label for="">checkHourlyRate</label>
-                <input type="number" placeholder="1380" class="checkHourlyRate-Field"
-                    onblur="validateHourlyInputs(this,event)" />
-                <label for="">paychecksYTD</label>
-                <input type="number" placeholder="1380" class="paychecksYTD-Field"
-                    onblur="validateHourlyInputs(this,event)" />
-                <label for="">expectedYTDHour</label>
-                <input type="number" placeholder="1380" class="expectedYTDHour-Field"
-                    onblur="validateHourlyInputs(this,event)" />
-                <label for="">Income</label>
-                <input type="number" placeholder="1380" class="income-Field"
-                    onblur="validateHourlyInputs(this,event)" />
-                    
-            </div>
-    <p class="filledMessage"></p>
-`;
-    document.getElementById('hourlyBlockContainer').appendChild(additionalHourlyBlock);
-}
-function calculateTotalHourlyDays() {
-    let totalDays = 0;
-    const hourlyBlocks = document.querySelectorAll('.hourlyBlocks');
-    hourlyBlocks.forEach(block => {
-        const startDateInput = block.querySelector('.hourlyStartDate').value;
-        const endDateInput = block.querySelector('.hourlyEndDate').value;
-
-        if (startDateInput && endDateInput) {
-            const startDate = new Date(startDateInput);
-            const endDate = new Date(endDateInput);
-            totalDays += calculateDays(startDate, endDate);
-        }
-    });
-    return totalDays;
-}
-function areHourlyDatesContiguous() {
-    const hourlyBlocks = document.querySelectorAll('.hourlyBlocks');
-    for (let i = 0; i < hourlyBlocks.length - 1; i++) {
-        const currentEndDate = new Date(hourlyBlocks[i].querySelector('.hourlyEndDate').value);
-        const nextStartDate = new Date(hourlyBlocks[i + 1].querySelector('.hourlyStartDate').value);
-        const dayAfterCurrentEndDate = new Date(currentEndDate);
-        dayAfterCurrentEndDate.setDate(currentEndDate.getDate() + 1);
-        if (dayAfterCurrentEndDate.getTime() !== nextStartDate.getTime()) {
-            return false;
-        }
-    }
-    return true;
-}
-function validateHourlyInputs(input, event) {
-    allHourlyFilled = true;
-    let startDate = '';
-    let endDate = '';
-    let days = '';
-    let hourlyRate;
-    let HourlyDaysIn;
-
-    const hourlyBlockContainer = document.getElementById('hourlyBlockContainer');
-    const variablesToCheck = ['.hourlyStartDate', '.hourlyEndDate', '.hourlyRate', '.currentHourBasePay', '.currentGrossBasePay-hourly', '.YTDhour-hourly', '.ytdGrossBasePay-hourly'];
-    let allFieldsFilled = true; // Flag to track if all fields are filled
-    for (const selector of variablesToCheck) {
-        const elements = hourlyBlockContainer.querySelectorAll(selector);
-        for (const element of elements) {
-            const value = element.value;
-            if (!value) {
-                allFieldsFilled = false; // Set the flag to false if any field is empty
-                break; // No need to check further if one field is empty
-            }
-        }
-        if (!allFieldsFilled) {
-            break; // No need to check further if one field is empty
-        }
-    }
-
-    if (allFieldsFilled) {
-        // If all fields are filled, calculate HourlyDaysIn
-        HourlyDaysIn = calculateTotalHourlyDays();
-    }
-
-    document.querySelectorAll('.hourlyBlocks').forEach(block => {
-        const hourlyStartDate = block.querySelector('.hourlyStartDate').value;
-        const hourlyEndDate = block.querySelector('.hourlyEndDate').value;
-        hourlyRate = block.querySelector('.hourlyRate').value;
-        const convertToDate = new Date(hourlyEndDate);
-        const currentHourBasePay = block.querySelector('.currentHourBasePay').value;
-        const currentGrossBasePayHourly = block.querySelector('.currentGrossBasePay-hourly').value;
-        const ytdHourHourly = block.querySelector('.YTDhour-hourly').value;
-        const ytdGrossBasePayHourly = block.querySelector('.ytdGrossBasePay-hourly').value;
-        checkHourlyRateField = block.querySelector('.checkHourlyRate-Field');
-        paychecksYTDField = block.querySelector('.paychecksYTD-Field');
-        expectedYTDHourField = block.querySelector('.expectedYTDHour-Field');
-        incomeField = block.querySelector('.income-Field');
-        filledMessage = block.querySelector('.filledMessage');
-        hourlyConsole = block.querySelector('.hourlyConsole');
-
-
-        employmentSummary.incomeType.hourly.endDateOfLastPaystub = new Date(hourlyEndDate);
-        employmentSummary.incomeType.hourly.currentGrossBasePay = currentGrossBasePayHourly;
-        employmentSummary.incomeType.hourly.ytdGrossBasePay = ytdGrossBasePayHourly;
-
-
-        if (!hourlyStartDate || !hourlyEndDate || !hourlyRate || !currentHourBasePay || !currentGrossBasePayHourly || !ytdHourHourly || !ytdGrossBasePayHourly) {
-            allHourlyFilled = false;
-            return;
-        }
-        if (hourlyStartDate && hourlyEndDate) {
-            startDate = new Date(hourlyStartDate);
-            endDate = new Date(hourlyEndDate);
-            days = calculateDays(startDate, endDate);
-            const validDays = acceptedDays.includes(days);
-        }
-        if (HourlyDaysIn >= 28) {
-            const checkHourlyRate = ytdGrossBasePayHourly / ytdHourHourly;
-            if (checkHourlyRate != hourlyRate) {
-                filledMessage.innerText = "there was a pay raise...";
-                filledMessage.style.display = "block";
-                allHourlyFilled = false;
-            }
-            allMonths.push(convertToDate.getMonth());
-            firstfrequency = [];
-            const allFeb = allMonths[0] === 1 ? true : false;
-            const isFebruary = convertToDate.getMonth() === 1;
-            const firstDayOfFebruary = new Date(convertToDate.getFullYear(), 1, 1);
-            let truncDays = days;
-            const isSundayOrMonday = firstDayOfFebruary.getDay() === 0 || firstDayOfFebruary.getDay() === 1;
-            const checkCondition = isFebruary && truncDays === 14 && isSundayOrMonday && allFeb;
-            let frequency = '';
-            switch (truncDays) {
-                case 7:
-                    frequency = 'weekly';
-                    break;
-                case 14:
-                    frequency = selectedFrequency;
-                    break;
-                case 15:
-                case 16:
-                    frequency = checkCondition ? selectedFrequency : 'semi-monthly';
-                    break;
-                default:
-                    frequency = 'monthly';
-                    break;
-            }
-            firstfrequency.push(frequency);
-            const frequencyOne = firstfrequency[0];
-            let frequencyValue = '';
-            switch (frequencyOne) {
-                case 'weekly':
-                    frequencyValue = 40;
-                    break;
-                case 'bi-weekly':
-                    frequencyValue = 80;
-                    break;
-                case 'semi-monthly':
-                    frequencyValue = 86.66666666677;
-                    break;
-                case 'monthly':
-                    frequencyValue = 173.333333;
-                    break;
-                default:
-                    frequencyValue = 1;
-                    break;
-            }
-            if (checkCondition) {
-                if (document.querySelector('.pIntenvalBox2').style.display !== 'block') {
-                    document.querySelector('.pIntenvalBox2').style.display = 'block';
-                    return;
-                }
-            } else {
-                document.querySelector('.pIntenvalBox2').style.display = 'none';
-
+            for (i = 0; i < length; i++) {
+                var positionX = 12 + i * 200;
+                var rect = makeSVG("rect", { x: positionX, y: 9, width: 200, height: 6 });
+                document.getElementById("svg_form_time").appendChild(rect);
+                // <g><rect x="12" y="9" width="200" height="6"></rect></g>'
+                var circle = makeSVG("circle", {
+                    cx: positionX,
+                    cy: 12,
+                    r: 12,
+                    width: positionX,
+                    height: 6,
+                });
+                document.getElementById("svg_form_time").appendChild(circle);
             }
 
-            const paychecksYTD = calculatePaychecksYTD(frequencyOne, startDate, endDate);
-            const expectedYTDHour = frequencyValue * paychecksYTD;
-            if (expectedYTDHour !== ytdHourHourly) {
-                filledMessage.innerText = "Borrower has less than 40 hours per week";
-                filledMessage.style.display = "block";
-                reasonBox.style.display = "block";
-                allHourlyFilled = false;
-                // Check if current employment exists
-                if (currentEmployementExists && !renderResultsCalled) {
-                    // Example usage - Replace with your actual data
-                    const employmentHistory = currentEmploymentDates;
-
-                    // Calculate the weeks for employment history and separate by year
-                    const weeksByYearEmploymentHistory = separateWeeksByYear(employmentHistory);
-                    renderResults(weeksByYearEmploymentHistory);
-                    renderResultsCalled = true;
-                }
-
-            } else {
-                filledMessage.innerText = "";
-                filledMessage.style.display = "none";
-                reasonBox.style.display = "none";
-                allHourlyFilled = true;
-            }
-            const monthsYTD = CalcMonthsYTD(convertToDate); // no of months
-            const income = hourlyRate * 2080 / 12;
-
-            employmentSummary.incomeType.hourly.totalMonths = monthsYTD;
-            employmentSummary.incomeType.hourly.currentGrossBasePay = income;
-
-            checkHourlyRateField.value = checkHourlyRate;
-            checkHourlyRateField.disabled = true;
-            paychecksYTDField.value = paychecksYTD;
-            paychecksYTDField.disabled = true;
-            expectedYTDHourField.value = expectedYTDHour;
-            expectedYTDHourField.disabled = true
-            incomeField.value = income;
-            incomeField.disabled = true;
-            hourlyConsole.style.display = 'block';
-
-
-
-        }
-
-
-    });
-    if (allHourlyFilled) {
-
-        validateHourlyAndContinue()
-    }
-}
-
-// Function to calculate the number of weeks between two dates
-function calculateWeeks(startDate, endDate) {
-    // Get the time difference in milliseconds
-    const differenceInMilliseconds = endDate - startDate;
-
-    // Convert milliseconds to days
-    const millisecondsPerDay = 1000 * 60 * 60 * 24;
-    const days = differenceInMilliseconds / millisecondsPerDay;
-
-    // Convert days to weeks
-    const weeks = days / 7;
-
-    // Return the exact number of weeks without rounding
-    return weeks;
-}
-
-function updateWeeks(event, blockClass) {
-    const className = blockClass;
-    // Get the closest ancestor element with the class .yearblock
-    const block = event.target.closest(className);
-    if (block) {
-        // Get start and end date input values
-        const startDateInput = block.querySelector('.startDateInHourly').value;
-        const endDateInput = block.querySelector('.endDateInHourly').value;
-        const [startYear, startMonth, startDay] = startDateInput.split('-').map(Number);
-        const [endYear, endMonth, endDay] = endDateInput.split('-').map(Number);
-
-        // Create new Date objects using split values
-        const startDate = new Date(startYear, startMonth - 1, startDay);
-        const endDate = new Date(endYear, endMonth - 1, endDay);
-        // Calculate the number of weeks between the dates
-        const noOfWeeks = calculateWeeks(startDate, endDate);
-        // Set the result to the .numberOfWeeksClass input
-        block.querySelector('.numberOfWeeksClass').value = noOfWeeks;
-        block.querySelector('.ExpectedYTDHoursYear').value = noOfWeeks * 40;
-
-        // Call calculateAverageHour at the end
-        calculateAverageHour(event);
-    }
-}
-// Function to separate weeks by year for employment history, including from and to dates
-
-function separateWeeksByYear(employmentHistory) {
-    let weeksByYear = {};
-    employmentHistory.forEach(employmentPeriod => {
-        const startDate = new Date(employmentPeriod.startDate);
-        const endDate = new Date(employmentPeriod.endDate);
-        const startYear = startDate.getFullYear();
-        const endYear = endDate.getFullYear();
-        for (let year = startYear; year <= endYear; year++) {
-            const startOfCurrentYear = new Date(year, 0, 1);
-            const endOfCurrentYear = new Date(year, 11, 31);
-            const adjustedStartDate = startYear === year ? startDate : startOfCurrentYear;
-            const adjustedEndDate = endYear === year ? endDate : endOfCurrentYear;
-            const weeksInCurrentYear = calculateWeeks(adjustedStartDate, adjustedEndDate);
-            const monthsInCurrentYear = calculateMonths(adjustedStartDate, adjustedEndDate);
-            if (!weeksByYear[year]) {
-                weeksByYear[year] = {
-                    year: year,
-                    weeks: weeksInCurrentYear,
-                    months: monthsInCurrentYear,
-                    from: adjustedStartDate,
-                    to: adjustedEndDate,
-                    hours: weeksInCurrentYear * 40
-                };
-            } else {
-                weeksByYear[year].weeks += weeksInCurrentYear;
-                weeksByYear[year].hours += weeksInCurrentYear * 40;
-                weeksByYear[year].to = adjustedEndDate;
-                weeksByYear[year].months += monthsInCurrentYear;
-            }
-        }
-    });
-    const currentYear = new Date().getFullYear();
-    const filteredWeeksByYear = {};
-    for (let year = currentYear; year >= currentYear - 2; year--) {
-        if (weeksByYear[year]) {
-            filteredWeeksByYear[year] = weeksByYear[year];
-        }
-    }
-
-    return filteredWeeksByYear;
-}
-
-function validateHourlyAndContinue() {
-    totalHourlyDays = calculateTotalHourlyDays();
-    var hourlyRates = [];
-    document.querySelectorAll('.hourlyRate').forEach(input => {
-        hourlyRates.push(input.value);
-    });
-    const firstValue = hourlyRates[0];
-    const allValuesSame = hourlyRates.every(item => item === firstValue);
-    if (!allValuesSame) {
-        flagedforvalidation(false, "block", "Not all values are the same in hourlyRates");
-        return;
-    } else {
-        flagedforvalidation(true, "none", "");
-    }
-    var eachPeriodinDays = [];
-    const hourlyBlocks = document.querySelectorAll('.hourlyBlocks');
-    hourlyBlocks.forEach(block => {
-        const startDateInput = block.querySelector('.hourlyStartDate').value;
-        const endDateInput = block.querySelector('.hourlyEndDate').value;
-        if (startDateInput && endDateInput) {
-            const startDate = new Date(startDateInput);
-            const endDate = new Date(endDateInput);
-            const days = calculateDays(startDate, endDate);
-            eachPeriodinDays.push(days);
-        }
-    });
-    const firstPeriod = eachPeriodinDays[0];
-    const allPeriodsSame = eachPeriodinDays.every(item => item === firstPeriod);
-    if (!allPeriodsSame) {
-        if (firstPeriod === 15) {
-            if (eachPeriodinDays.some(item => item === 16 || item === 14)) {
-                flagedforvalidation(true, "none", "");
-            } else {
-                flagedforvalidation(false, "block", "pay period Should be same in each period")
-                return;
-            }
-
-        }
-        else if (firstPeriod === 16) {
-            if (eachPeriodinDays.some(item => item === 15 || item === 14)) {
-                flagedforvalidation(true, "none", "");
-            } else {
-                flagedforvalidation(false, "block", "pay period Should be same in each period")
-                return;
-            }
-        }
-        else {
-            flagedforvalidation(false, "block", "pay period Should be same in each period")
-            return;
-        }
-
-    } else {
-        flagedforvalidation(true, "none", "");
-    }
-
-    var ytdGrossBasePay = [];
-    document.querySelectorAll('.ytdGrossBasePay-hourly').forEach(input => {
-        ytdGrossBasePay.push(input.value);
-    });
-    const totalContiguousDays = areHourlyDatesContiguous();
-    if (!totalContiguousDays) {
-        flagedforvalidation(false, "block", "Dates are not contiguous");
-        return;
-    } else {
-        flagedforvalidation(true, "none", "");
-    }
-    if (BoxMaker) {
-        if (totalHourlyDays < 28) {
-            createAdditionalHourlyBlock();
-        }
-    }
-
-}
-function calculatePaychecksYTD(payFrequency, lastPaystubStartDate, lastPaystubEndDate) {
-    const startDate = new Date(lastPaystubStartDate);
-    const endDate = new Date(lastPaystubEndDate);
-    const yearStart = new Date(endDate.getFullYear(), 0, 1);
-    let totalPaychecks = 0;
-
-    switch (payFrequency) {
-        case 'weekly':
-            totalPaychecks = Math.floor((endDate - yearStart) / (7 * 24 * 60 * 60 * 1000)) + 1;
-            break;
-        case 'bi-weekly':
-            const daysSinceYearStart = Math.ceil((endDate - yearStart) / (24 * 60 * 60 * 1000));
-            totalPaychecks = Math.floor(daysSinceYearStart / 14); // No need to add 1 for the current incomplete pay period
-            break;
-
-        case 'semi-monthly':
-            const startYear = startDate.getFullYear();
-            const endYear = endDate.getFullYear();
-            const endMonth = endDate.getMonth();
-            for (let month = 0; month < endMonth; month++) {
-                totalPaychecks += 2; // Each complete month contributes 2 paychecks
-            }
-
-            // Handle the current month
-            if (endDate.getDate() > 15) {
-                totalPaychecks += 2; // Both semi-monthly paychecks for the current month
-            } else if (endDate.getDate() >= 1) {
-                totalPaychecks += 1; // Only the first semi-monthly paycheck for the current month
-            }
-            break;
-        case 'monthly':
-            totalPaychecks = endDate.getMonth() + 1;
-            break;
-        default:
-            throw new Error('Invalid pay frequency');
-    }
-
-    return totalPaychecks;
-}
-
-function formatDate(date) {
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    return `${year}-${month}-${day}`;
-}
-
-function renderResults(weeksByYear) {
-
-    const yearCollectionDiv = document.querySelector('.yearCollection');
-    const currentYear = new Date().getFullYear();
-    const sortedYears = Object.keys(weeksByYear).sort((a, b) => b - a);
-
-    sortedYears.forEach(year => {
-        const yearData = weeksByYear[year];
-        const hoursValue = yearData.hours;
-        const weeks = yearData.weeks;
-
-        const yearLabel = year == currentYear ? "YTD" : year;
-
-        const yearHTML = `
-    <strong class="strongSubHeading" style="margin-bottom: 10px;">${yearLabel}</strong>
-    <label for="">From</label>
-    <input type = "date" class="startDateInHourly" value="${formatDate(new Date(yearData.from))}" disabled />
-    <label for="">To</label>
-    <input type = "date" class="endDateInHourly" value="${formatDate(new Date(yearData.to))}" ${year == currentYear ? 'onblur="updateWeeks(event,\'.yearblock\')"' : 'disabled'} />
-    <label for="">YTD Gross Base Pay</label>
-    <input type="number" onblur='calculateAverageHour(event)' class="YTDGrossBasePay-HY" />
-    <label for="">YTD Hours</label>
-    <input type="number" onblur='calculateAverageHour(event)' class="ytdHoursInputYear" />
-    <label for="">Expected YTD Hours</label>
-    <input type="number" class = "ExpectedYTDHoursYear" value="${hoursValue}" disabled />
-    <label for="">Number of weeks</label>
-    <input type="number" class="numberOfWeeksClass" value="${weeks}" disabled />
-    <label for="">Average Hour</label>
-    <input type="number" value="" class="AveragehourYear" disabled />
-    <label for="">YTD income</label>
-    <input type="number" value="" class="incomeyear" disabled />
-`;
-
-        const yearDiv = document.createElement('div');
-        yearDiv.className = 'yearblock';
-        yearDiv.innerHTML = yearHTML;
-        yearCollectionDiv.appendChild(yearDiv);
-    });
-}
-function renderYTDandTwoYear(weeksByYear) {
-
-    const yearCollectionDiv = document.querySelector('.Ytdand2year');
-    const currentYear = new Date().getFullYear();
-    const sortedYears = Object.keys(weeksByYear).sort((a, b) => b - a);
-
-    sortedYears.forEach(year => {
-        const yearData = weeksByYear[year];
-        const hoursValue = yearData.hours;
-        const months = yearData.months;
-
-        const yearLabel = year == currentYear ? "YTD" : year;
-
-        const yearHTML = `
-<strong class="strongSubHeading" style="margin-bottom: 10px;">${yearLabel}</strong>
-<label for="">From</label>
-<input type = "date" class="startDateInVar" value="${formatDate(new Date(yearData.from))}" disabled />
-<label for="">To</label>
-<input type = "date" class = "endDateInVar" value="${formatDate(new Date(yearData.to))}" ${year == currentYear ? 'onblur="updateMonths(event,\'.yearEarningBlock\')"' : 'disabled'} />
-<label for=""  >Total Earnings</label>
-<input type="number" onblur='calculateTotalEarning(event,".yearEarningBlock")'  class="totalEarningsInVar" />
-<label for="">No Of Months</label>
-<input type="number" class="noOfMonths" value="${months}"" disabled />
-<label for="" >Monthly Earnings</label>
-<input type="number" class = "MonEarning"  disabled />
-<label for="">% Change</label>
-<input type="number" class="changeInEarning"  disabled />
-
-`;
-
-        const yearDiv = document.createElement('div');
-        yearDiv.className = 'yearEarningBlock';
-        yearDiv.innerHTML = yearHTML;
-        yearCollectionDiv.appendChild(yearDiv);
-    });
-}
-
-function calculateAverageHour(event) {
-    // Get the closest ancestor element with the class .hourlyBlocks
-    const block = event.target.closest('.yearblock');
-
-    // Find the input elements within the block
-    const YTDGrossBasePayHY = block.querySelector('.YTDGrossBasePay-HY');
-    const ytdHoursInput = block.querySelector('.ytdHoursInputYear');
-    const AveragehourYear = block.querySelector('.AveragehourYear');
-    const incomeyear = block.querySelector('.incomeyear');
-    const numberOfWeeksClass = block.querySelector('.numberOfWeeksClass').value;
-
-    // Get the values from the input fields
-    const YTDGrossBasePay = YTDGrossBasePayHY.value;
-    const ytdHours = ytdHoursInput.value;
-
-    // Check if both fields are filled
-    if (YTDGrossBasePay.length > 1 && ytdHours.length > 1) {
-        // Calculate the closest average hour
-        const averageHour = ytdHours / numberOfWeeksClass;
-        const income = YTDGrossBasePay / (numberOfWeeksClass / 4.33333333);
-        AveragehourYear.value = averageHour;
-        incomeyear.value = income;
-    }
-}
-
-function updateFrequency(selectElement) {
-    const selectedValue = selectElement.value;
-    firstfrequency = [];
-    if (selectedValue === "Bi-Weekly") {
-        selectedFrequency = 'bi-weekly';
-        firstfrequency.push(selectedFrequency);
-    } else if (selectedValue === "2x Per Month") {
-        selectedFrequency = 'semi-monthly';
-        firstfrequency.push(selectedFrequency);
-    }
-    validateHourlyInputs();
-}
-
-// varable Section Starts Here 
-
-let wrpperBasePay = document.querySelector('.wrpper-basePay');
-let basePaySalary = document.getElementById("basePaySalary");
-let varPay = document.getElementById("varPay");
-let basePayQuestionSelect = document.getElementById("basePayQuestionSelect");
-let currentRateOfPay = document.querySelector('.currentRateOfPay');
-let payFrequencyInVar = document.querySelector('.payFrequencyInVar');
-let monthlyEarning = document.querySelector('.monthlyEarning');
-let yearlyEarning = document.querySelector('.yearlyEarning');
-let clacResults = document.querySelector('.clacResults');
-
-function calcBasePay() {
-    if (currentRateOfPay.value && payFrequencyInVar.value) {
-        let periodsPerYear;
-        const payFrequency = payFrequencyInVar.value;
-        switch (payFrequency) {
-            case "Weekly":
-                periodsPerYear = 52;
-                break;
-            case "Bi-Weekly":
-                periodsPerYear = 26;
-                break;
-            case "Bi-monthly":
-                periodsPerYear = 24;
-                break;
-            case "Monthly":
-                periodsPerYear = 12;
-                break;
-            case "Yearly":
-                periodsPerYear = 1;
-                break;
-            case "Hourly":
-                periodsPerYear = 2080;
-                break;
-            default:
-                periodsPerYear = 1;
-        }
-
-        const yearMoney = periodsPerYear * currentRateOfPay.value;
-        const monthMoney = yearMoney / 12;
-        yearlyEarning.value = yearMoney;
-        monthlyEarning.value = monthMoney;
-        clacResults.style.display = "block";
-
-    }
-}
-
-function basePayQuestion() {
-    if (basePayQuestionSelect.value === "Yes") {
-        basePaySalary.style.display = "block";
-        // Example usage - Replace with your actual data
-        const employmentHistory = currentEmploymentDates;
-        // Calculate the weeks for employment history and separate by year
-        const weeksByYearEmploymentHistory = separateWeeksByYear(employmentHistory);
-        renderYTDandTwoYear(weeksByYearEmploymentHistory);
-        wrpperBasePay.style.display = "none";
-
-    } else {
-        basePaySalary.style.display = "none";
-        wrpperBasePay.style.display = "block";
-
-    }
-
-}
-
-function salleryToBasePay() {
-    wrpperBasePay.style.display = "block";
-}
-
-function calculateMonths(startDate, endDate) {
-    const startYear = startDate.getFullYear();
-    const endYear = endDate.getFullYear();
-    const startMonth = startDate.getMonth();
-    const endMonth = endDate.getMonth();
-    const startDay = startDate.getDate();
-    const endDay = endDate.getDate();
-
-    // Calculate the difference in years and months
-    const diffYears = endYear - startYear;
-    const diffMonths = endMonth - startMonth;
-
-    // Calculate the number of days in the starting month and ending month
-    const daysInStartMonth = new Date(startYear, startMonth + 1, 0).getDate();
-    const daysInEndMonth = new Date(endYear, endMonth + 1, 0).getDate();
-
-    // Calculate the fraction of the ending month
-    const fractionalMonthsEnd = endDay / daysInEndMonth;
-
-    // Calculate the total number of months
-    let totalMonths = (diffYears * 12) + diffMonths;
-
-    // If there's a fraction of the ending month and the starting day is less than or equal to the days in the starting month, add it to the total
-    if (startDay <= daysInStartMonth) {
-        totalMonths += fractionalMonthsEnd;
-    } else {
-        // If the starting day is greater than the number of days in the starting month,
-        // we're considering an entire additional month
-        totalMonths++;
-    }
-
-    return totalMonths; // Return as a string with six decimal places
-}
-
-function updateMonths(event, blockClass) {
-    const className = blockClass;
-    // Get the closest ancestor element with the class .yearEarningBlock
-    const block = event.target.closest(className);
-    if (block) {
-        // Get start and end date input values
-        const startDateInput = block.querySelector('.startDateInVar').value;
-        const endDateInput = block.querySelector('.endDateInVar').value;
-
-        // Split the input values to ensure correct parsing
-        const [startYear, startMonth, startDay] = startDateInput.split('-').map(Number);
-        const [endYear, endMonth, endDay] = endDateInput.split('-').map(Number);
-
-        // Create new Date objects using split values
-        const startDate = new Date(startYear, startMonth - 1, startDay);
-        const endDate = new Date(endYear, endMonth - 1, endDay);
-        // Calculate the number of months between the dates
-        const noOfMonths = calculateMonths(startDate, endDate);
-
-        // Set the result to the .noOfMonths input
-        block.querySelector('.noOfMonths').value = noOfMonths;
-        calculateTotalEarning(event, className);
-    }
-}
-function paidOutQuestion(selectElement) {
-    let oftenPaid = selectElement.value;
-    let block = selectElement.closest('.bonusCommissionQuestions');
-    let yearlyConnected = block.querySelector('.yearlyConnected');
-    let quarterlyConnected = block.querySelector('.quarterlyConnected');
-
-    if (oftenPaid === "Once a year") {
-        yearlyConnected.style.display = "block";
-        quarterlyConnected.style.display = "none";
-    } else if (oftenPaid === "Quarterly") {
-        yearlyConnected.style.display = "none";
-        quarterlyConnected.style.display = "block";
-    }
-}
-
-function renderBasePay(weeksByYear, payType) {
-    const renderBasePayBox = document.querySelector('.renderBasePay');
-    const currentYear = new Date().getFullYear();
-    const sortedYears = Object.keys(weeksByYear).sort((a, b) => b - a);
-    const uniqueClass = `BasePayEarningBlock-${payType.replace(/\s+/g, '-')}`;
-
-    // Check if the block already exists
-    if (document.querySelector(`.${uniqueClass}`)) {
-        return; // Block already exists, exit the function
-    }
-
-    // HTML for bonus and commission questions
-    let bonusQuestionHTML = '';
-    if (payType === 'Bonus' || payType === 'Commission') {
-        const additionalMonthlyOption = payType === 'Commission' ? '<option value="Monthly">Monthly</option>' : '';
-        bonusQuestionHTML = `  
-    <strong class="strong-text">Additional Information About ${payType}</strong>  
-    <div class="bonusCommissionQuestions">
-        <p class="bonus-q">How often is ${payType.toLowerCase()} paid out?</p>
-        <select class="howOften"  onchange = paidOutQuestion(this)> 
-            <option value="Once a year">How often</option>
-            <option value="Once a year">Once a year</option>
-            <option value="Quarterly">Quarterly</option>
-            ${additionalMonthlyOption}
-        </select> 
-        <div class="yearlyConnected" style="display:none">
-            <p class="bonus-q">Has ${payType.toLowerCase()} been paid out this year?</p>
-            <select class = "yearlyConnectedSelect"> 
-                <option value="PaidOutAlready">Select Option</option>
-                <option value="PaidOutAlready">${payType} has been paid out already</option>
-                <option value="NotPaidOutYetFinalized">${payType} has not been paid out yet but amount has already been finalized</option>
-                <option value="NotPaidOutNotFinalized">${payType} has not been paid out and has not been finalized</option>
-            </select> 
-        </div>
-        <div class="quarterlyConnected" style="display:none">
-            <p class="bonus-q">How many ${payType.toLowerCase()} payouts have been made?</p>
-            <select class = "quarterlyConnectedSelect"> 
-                 <option value="one">How many</option>
-                <option value="one">1</option>
-                <option value="two">2</option>
-                <option value="three">3</option>
-                <option value="four">4</option>
-            </select> 
-        </div>
-    </div>
-    
-`;
-
-    }
-
-    // Loop through years
-    sortedYears.forEach((year, index) => {
-        const yearData = weeksByYear[year];
-        const hoursValue = yearData.hours;
-        const months = yearData.months;
-
-        const yearLabel = year == currentYear ? "YTD" : year;
-
-        const yearHTML = `
-<h3>${payType}</h3>
-<strong class="strongSubHeading" style="margin-bottom: 10px;">${yearLabel}</strong>
-<label for="">From</label>
-<input type="date" class="startDateInVar" value="${formatDate(new Date(yearData.from))}" disabled />
-<label for="">To</label>
-<input type="date" class="endDateInVar" value="${formatDate(new Date(yearData.to))}" ${year == currentYear ? `onblur="updateMonths(event, '.${uniqueClass}')"` : 'disabled'} />
-<label for="">Total Earnings</label>
-<input type="number" onblur="calculateTotalEarning(event, '.${uniqueClass}')" class="totalEarningsInVar" />
-<label for="">No Of Months</label>
-<input type="number" class="noOfMonths" value="${months}" disabled />
-<label for="">Monthly Earnings</label>
-<input type="number" class="MonEarning" disabled />
-<label for="">% Change</label>
-<input type="number" class="changeInEarning" disabled />
-`;
-
-
-
-        const yearDiv = document.createElement('div');
-        yearDiv.className = uniqueClass;
-
-        // Append bonus/commission questions inside the block if it's the first year block
-        if (bonusQuestionHTML && index === 0) {
-            const bonusDiv = document.createElement('div');
-            bonusDiv.innerHTML = bonusQuestionHTML;
-            yearDiv.appendChild(bonusDiv);
-        }
-
-        yearDiv.innerHTML += yearHTML;
-        renderBasePayBox.appendChild(yearDiv);
-    });
-}
-
-document.querySelectorAll('input[name="compensation"]').forEach(checkbox => {
-    checkbox.addEventListener('change', createBoxesBasedOnPay);
-});
-
-function createBoxesBasedOnPay() {
-    const selectedValues = Array.from(document.querySelectorAll('input[name="compensation"]:checked'))
-        .map(checkbox => checkbox.value);
-
-    const existingBlocks = Array.from(document.querySelectorAll('.renderBasePay > div'));
-
-    // Remove blocks corresponding to unchecked checkboxes
-    existingBlocks.forEach(block => {
-        const blockType = block.querySelector('h3').textContent.trim();
-        if (!selectedValues.includes(blockType)) {
-            block.remove();
-        }
-    });
-
-    // Add new blocks for selected checkboxes
-    selectedValues.forEach(select => {
-        const employmentHistory = currentEmploymentDates;  // Use your actual data source here
-        const weeksByYearEmploymentHistory = separateWeeksByYear(employmentHistory);
-        renderBasePay(weeksByYearEmploymentHistory, select);
-    });
-}
-
-function calculateTotalEarning(event, blockClass) {
-    const className = blockClass;
-    // Get all elements with the class .yearEarningBlock
-    const blocks = document.querySelectorAll(className);
-
-    let changes = [];
-    let earning = [];
-    let monthlyEarning = [];
-    let months = [];
-
-    blocks.forEach((block, index) => {
-        // Find the input elements within the block
-        const totalEarnings = block.querySelector('.totalEarningsInVar').value;
-        const noOfMonths = block.querySelector('.noOfMonths').value;
-        const monEarningElement = block.querySelector('.MonEarning');
-        const changeInEarningElement = block.querySelector('.changeInEarning');
-        // Check if block is for bonus or commission
-        const payType = block.querySelector('h3')?.textContent.trim() || '';
-
-        if (totalEarnings && noOfMonths > 0) {
-            let monEarning;
-            // Calculate the monthly earning
-            if (payType === 'Bonus' || payType === 'Commission') {
-                let howOften = blocks[0].querySelector('.howOften').value;
-                let divider = 12;
-                if (howOften === "Once a year") {
-                    let yearlyConnectedSelect = blocks[0].querySelector('.yearlyConnectedSelect').value;
-                    monEarning = totalEarnings / divider;
-                    monEarningElement.value = monEarning;
-                }
-                else if (howOften === "Quarterly") {
-                    let quarterlyConnectedSelect = blocks[0].querySelector('.quarterlyConnectedSelect').value;
-
-                    switch (quarterlyConnectedSelect) {
-                        case "one":
-                            divider = 3;
-                            break;
-                        case "two":
-                            divider = 6;
-                            break;
-                        case "three":
-                            divider = 9;
-                            break;
-                        case "four":
-                            divider = 12;
-                            break;
-                        default:
-                            divider = 3;
-                            break;
+            var circle = makeSVG("circle", {
+                cx: positionX + 200,
+                cy: 12,
+                r: 12,
+                width: positionX,
+                height: 6,
+            });
+            document.getElementById("svg_form_time").appendChild(circle);
+
+            $("#svg_form_time rect").css("fill", base_color);
+            $("#svg_form_time circle").css("fill", base_color);
+            $("circle:nth-of-type(1)").css("fill", active_color);
+
+            $(".button").click(function () {
+                $("#svg_form_time rect").css("fill", active_color);
+                $("#svg_form_time circle").css("fill", active_color);
+                var id = $(this).attr("id");
+                if (id == "next") {
+                    $("#prev").removeClass("disabled");
+                    if (child >= length) {
+                        $(this).addClass("disabled");
+                        $("#submit").removeClass("disabled");
+                    }
+                    if (child <= length) {
+                        child++;
                     }
 
-                    monEarning = totalEarnings / divider;
-                    monEarningElement.value = monEarning;
 
+
+                    if (child === 2) {
+                        const name = document.querySelector(".additionalBorrowerName")
+                        const employmentBlocks = document.querySelectorAll(".additionalEmploymentBlock");
+                        borrowerName = name.value.toString();
+
+                        employmentBlocks.forEach((block, index) => {
+                            console.log("CALLED");
+                            const employerName = block.querySelector(".additionalEmployerName");
+                            const position = block.querySelector(".additionalPosition");
+                            const startDateInput = block.querySelector('.additionalStartDate').value;
+                            const endDateInput = block.querySelector('.additionalEndDate').value;
+                            const isCurrentJob = block.querySelector('.CurrenPositionCheck').checked;
+
+                            const startDate = new Date(startDateInput);
+                            const endDate = isCurrentJob ? new Date() : new Date(endDateInput);
+
+                            const duration = calculateTotalMonths(startDate, endDate);
+                            totalMonths += duration;
+                            durations.push({ totalMonths, startDate, endDate, isCurrentJob });
+                            // if (index > 0) {
+                            const gapInfo = calculateGaps(startDate, endDate, isCurrentJob);
+
+                            if (gapInfo !== null) {
+                                const { gap, startOfTheMonth, endOfTheMonth } = gapInfo;
+                                totalGap += gap;
+                                gaps.push({ gap, startOfTheMonth, endOfTheMonth });
+                                gaps = gaps.filter(e => e.startOfTheMonth !== undefined && e.endOfTheMonth !== undefined);
+                                console.log("MAIN GAPS", gaps.length, "GAP VALUE", gap, "TOTAL GAP VALUE", totalGap);
+
+                            }
+                            // }
+                            employers.push(employerName.value.toString());
+                            positions.push(position.value.toString());
+                        });
+                    }
+
+                    // if (child === 2) {
+                    //     const name = document.querySelector(".additionalBorrowerName")
+                    //     const employmentBlocks = document.querySelectorAll(".additionalEmploymentBlock");
+                    //     borrowerName = name.value.toString();
+
+                    //     employmentBlocks.forEach((block, index) => {
+                    //         console.log("CALLED");
+                    //         const employerName = block.querySelector(".additionalEmployerName");
+                    //         const position = block.querySelector(".additionalPosition");
+                    //         const startDateInput = block.querySelector('.additionalStartDate').value;
+                    //         const endDateInput = block.querySelector('.additionalEndDate').value;
+                    //         const isCurrentJob = block.querySelector('.CurrenPositionCheck').checked;
+
+                    //         const startDate = new Date(startDateInput);
+                    //         const endDate = isCurrentJob ? new Date() : new Date(endDateInput);
+
+                    //         const { duration, gapInfo } = calculateMonths(startDate, endDate, { withGap: true, isCurrentJob: isCurrentJob });
+                    //         totalMonths += duration;
+                    //         durations.push({ totalMonths, startDate, endDate, isCurrentJob });
+
+                    //         // if (index > 0) {
+                    //         //     const { gapInfo } = calculateMonths(startDate, endDate, { withGap: true, isCurrentJob: isCurrentJob });
+                    //         const { gap, startOfTheMonth, endOfTheMonth } = gapInfo;
+                    //         totalGap += gap;
+
+                    //         // if (totalGap > 0) {
+                    //         gaps.push({ gap, startOfTheMonth, endOfTheMonth });
+                    //         // }
+                    //         console.log("MAIN GAPS", gaps.length, "GAP VALUE", gap, "TOTAL GAP VALUE", totalGap);
+                    //         // }
+
+                    //         gaps = gaps.filter(e => e.startOfTheMonth !== undefined && e.endOfTheMonth !== undefined);
+                    //         employers.push(employerName.value.toString());
+                    //         positions.push(position.value.toString());
+                    //     });
+                    // }
+
+                    if (child === 4) {
+                        summarySectionIntro.innerText = `${borrowerName}`;
+                        console.log("Borrower ", borrowerName);
+                        console.log("Employers ", employers);
+                        console.log("Positions ", positions);
+                        console.log("Durations ", durations);
+
+                        // const sourceOfIncomeType = incomeType[defaultIncomeType];
+
+                        // Object.keys(incomeType).forEach((type) => {
+                        //     switch (type) {
+                        //         case "hourly":
+                        //         case "salary":
+                        //             console.log(incomeAnalysisTypes.base(sourceOfIncomeType));
+                        //             incomeAnalysisSection.innerText = incomeAnalysisTypes.base(sourceOfIncomeType);
+                        //             break;
+
+                        //         default:
+                        //             break;
+                        //     }
+                        // });
+
+
+                        employers.forEach((employer, i) => {
+                            const jobStartDuration = moment(durations[i].startDate).format("LL");
+                            const jobEndDuration = moment(durations[i].endDate).format("LL");
+                            jobPosition = positions[i];
+                            summarySectionEmployments.innerText += `
+                                Employer: ${employer}
+                                ${jobStartDuration} - ${durations[i].isCurrentJob ? "Present" : jobEndDuration}
+                                Position:  ${jobPosition}
+                                `;
+                        });
+
+
+                        gaps?.forEach((e, i) => {
+                            summarySectionEmployments.innerText += `
+                                    Unemployment Gap ${i + 1}:
+                                    ${e.startOfTheMonth} - ${e.endOfTheMonth}
+                                `;
+                        });
+
+                        summarySectionDuration.innerText = `Total Month(s): ${durations[durations.length - 1].totalMonths
+                            }`;
+
+                        summarySectionGaps.innerText = `Total Gap: ${gaps.length > 0 ? gaps[gaps.length - 1].gap : 0} month(s).`;
+                    }
+                } else if (id == "prev") {
+                    clearAllData();
+
+                    $("#next").removeClass("disabled");
+                    $("#submit").addClass("disabled");
+                    if (child <= 2) {
+                        $(this).addClass("disabled");
+                    }
+                    if (child > 1) {
+                        child--;
+                    }
                 }
-                else if (howOften === "Monthly") {
-                    monEarning = totalEarnings / noOfMonths;
-                    monEarningElement.value = monEarning;
-                }
+                var circle_child = child + 1;
+                $("#svg_form_time rect:nth-of-type(n + " + child + ")").css("fill", base_color);
+                $("#svg_form_time circle:nth-of-type(n + " + circle_child + ")").css("fill", base_color);
+                var currentSection = $("section:nth-of-type(" + child + ")");
+                currentSection.fadeIn();
+                currentSection.css("transform", "translateX(0)");
+                currentSection.prevAll("section").css("transform", "translateX(-100px)");
+                currentSection.nextAll("section").css("transform", "translateX(100px)");
+                $("section").not(currentSection).hide();
+            });
+        });
 
-            }
-            else {
-                monEarning = totalEarnings / noOfMonths;
-                monEarningElement.value = monEarning;
-            }
-            earning.push(totalEarnings);
-            months.push(noOfMonths);
-            monthlyEarning.push(monEarning);
-            // Calculate the change in earning if the next month's earning exists
-            if (index + 1 < blocks.length) {
-                const nextBlock = blocks[index + 1];
-                const nextTotalEarnings = nextBlock.querySelector('.totalEarningsInVar').value;
-                const nextNoOfMonths = nextBlock.querySelector('.noOfMonths').value;
+        function clearAllData() {
+            gap = 0;
+            duration = 0;
+            totalGap = 0;
+            totalMonths = 0;
+            employers = [];
+            positions = [];
+            gaps = [];
+            durations = [];
+            s.clear();
+            e.clear();
 
-                if (nextTotalEarnings && nextNoOfMonths > 0) {
-                    const nextMonEarning = nextTotalEarnings / nextNoOfMonths;
-                    const changeInEarning = ((monEarning / nextMonEarning) - 1) * 100;
-                    changeInEarningElement.value = changeInEarning;
-                    changes.push(changeInEarning);
-                }
-            }
+            summarySectionIntro.innerText = "";
+            summarySectionDuration.innerText = "";
+            summarySectionEmployments.innerText = "";
+            summarySectionGaps.innerText = "";
         }
+    </script>
+</body>
 
-
-    });
-    checkChangeStatus(changes, blockClass, earning, months, monthlyEarning);
-}
-
-function checkChangeStatus(changes, blockClass, earning, months, monthlyEarning) {
-    if (changes.length < 2) {
-        return; // Not enough data to evaluate
-    }
-    let qualifyingPay;
-    let status;
-    const className = blockClass;
-    const blocks = document.querySelectorAll(className);
-
-    if (className === '.yearEarningBlock') {
-        qualifyingPay = document.querySelector('.monthlyEarning').value;
-    } else {
-        const changeFrom2023ToYTD = changes[0];
-        const changeFrom2022To2023 = changes[1];
-        const monthsInt = months.map(month => parseInt(month));
-        const earnInt = earning.map(item => parseInt(item));
-        const lowestEarning = Math.min(...monthlyEarning);
-
-        // Determine the status and calculate the qualifying pay
-        if (changeFrom2022To2023 < -10 && changeFrom2023ToYTD > 0) {
-            status = 'Normalized';
-            qualifyingPay = lowestEarning;
-        } else if (changeFrom2023ToYTD < -10) {
-            status = 'Unstable';
-            qualifyingPay = lowestEarning;
-        } else if (changeFrom2023ToYTD >= -10) {
-            status = 'Stable';
-            const totalEarnings = earnInt.reduce((a, b) => a + b, 0);
-            const totalMonths = monthsInt.reduce((a, b) => a + b, 0);
-            qualifyingPay = totalEarnings / totalMonths;
-        } else {
-            status = 'Undefined';
-            qualifyingPay = 1;
-        }
-
-        employmentSummary.incomeType.variable.status = status.toLowerCase();
-    }
-
-    // Create the HTML for the qualifying variable pay input
-    const html = `
-<label for="qualifyingPay">Qualifying Variable Pay</label>
-<input type="number" id="qualifyingPay" disabled value="${qualifyingPay}" />
-`;
-
-    // Append the HTML to the third block (blocks[2]) if it exists, else update its value
-    if (blocks.length >= 3) {
-        const block = blocks[2];
-        const existingInput = block.querySelector('#qualifyingPay');
-        if (existingInput) {
-            existingInput.value = qualifyingPay;
-        } else {
-            block.insertAdjacentHTML('beforeend', html);
-        }
-    }
-}
-
-// Self Employed Section Starts 
-let SoleProprietorScheduleC = document.getElementById('SoleProprietorScheduleC');
-let CCorporation1120 = document.getElementById("CCorporation1120");
-let SCorporation1120S = document.getElementById("SCorporation1120S");
-let Partnership1065 = document.getElementById('Partnership1065');
-
-function changeBusinessStructure() {
-    const block = document.getElementById("selfEmployedSection");
-    const employmentHistory = currentEmploymentDates;
-    const weeksByYearEmploymentHistory = separateWeeksByYear(employmentHistory);
-    if (currentEmployementExists && Object.keys(weeksByYearEmploymentHistory).length >= 3) {
-        block.querySelector('.errMessage').style.display = "none";
-        let businessStructureSelect = document.getElementById('businessStructureSelect');
-        if (businessStructureSelect.value === "Sole Proprietor Schedule C") {
-            SoleProprietorScheduleC.style.display = "block";
-            CCorporation1120.style.display = "none";
-            SCorporation1120S.style.display = "none";
-            Partnership1065.style.display = "none";
-
-        }
-        else if (businessStructureSelect.value === "C Corporation - 1120") {
-            SoleProprietorScheduleC.style.display = "none";
-            CCorporation1120.style.display = "block";
-            SCorporation1120S.style.display = "none";
-            Partnership1065.style.display = "none";
-
-        }
-        else if (businessStructureSelect.value === "S Corporation - 1120S") {
-            SoleProprietorScheduleC.style.display = "none";
-            CCorporation1120.style.display = "none";
-            SCorporation1120S.style.display = "block";
-            Partnership1065.style.display = "none";
-
-        }
-        else if (businessStructureSelect.value === "Partnership - 1065") {
-            SoleProprietorScheduleC.style.display = "none";
-            CCorporation1120.style.display = "none";
-            SCorporation1120S.style.display = "none";
-            Partnership1065.style.display = "block";
-
-        }
-
-    }
-    else {
-        block.querySelector('.errMessage').style.display = "block";
-
-
-    }
-
-
-}
-
-// SoleProprietorScheduleC In self Employed Section :
-function calculateTotalEarningsSelfEmployed() {
-    let block = document.getElementById('SoleProprietorScheduleC');
-
-    const fields = [
-        "net_profit_2023", "net_profit_2022",
-        "nonrecurring_income_2023", "nonrecurring_income_2022",
-        "depletion_2023", "depletion_2022",
-        "depreciation_2023", "depreciation_2022",
-        "mileage_2023", "mileage_2022",
-        "meals_entertainment_2023", "meals_entertainment_2022",
-        "Casualty_Loss_2023", "Casualty_Loss_2022",
-        "business_use_home_2023", "business_use_home_2022"
-    ];
-
-    let values = {};
-    let allFieldsFilled = true;
-
-    fields.forEach(field => {
-        let input = document.getElementsByName(field)[0];
-        let value = input ? input.value : '';
-        if (value === '') {
-            allFieldsFilled = false;
-        }
-        values[field] = parseFloat(value) || 0;
-    });
-
-    if (!allFieldsFilled) {
-        alert("Please fill in all input fields.");
-        return;
-    }
-
-    const calculateTotalEarnings = (netProfit, nonrecurringIncome, depletion, depreciation, mileage, mealsEntertainment, casualtyLoss, businessUseHome) => {
-        return netProfit - nonrecurringIncome +
-            depletion + depreciation + (mileage * 0.28) -
-            mealsEntertainment + casualtyLoss + businessUseHome;
-    };
-
-    let totalEarnings2023 = calculateTotalEarnings(
-        values.net_profit_2023, values.nonrecurring_income_2023,
-        values.depletion_2023, values.depreciation_2023,
-        values.mileage_2023, values.meals_entertainment_2023,
-        values.Casualty_Loss_2023, values.business_use_home_2023
-    );
-
-    let totalEarnings2022 = calculateTotalEarnings(
-        values.net_profit_2022, values.nonrecurring_income_2022,
-        values.depletion_2022, values.depreciation_2022,
-        values.mileage_2022, values.meals_entertainment_2022,
-        values.Casualty_Loss_2022, values.business_use_home_2022
-    );
-
-    // Display results
-    block.querySelector('.selfEmployee-earning23').value = totalEarnings2023.toFixed(2);
-    block.querySelector('.selfEmployee-earning22').value = totalEarnings2022.toFixed(2);
-
-    // Calculate and display monthly income (assuming 12 months)
-    block.querySelector('.selfEmployee-Monthlyearning23').value = (totalEarnings2023 / 12).toFixed(2);
-    block.querySelector('.selfEmployee-Monthlyearning22').value = (totalEarnings2022 / 12).toFixed(2);
-
-    // Calculate and display 2-year average
-    let average = ((totalEarnings2023 + totalEarnings2022) / 24).toFixed(2);
-    block.querySelector('.selfEmployee-2YearAverage').value = average;
-
-    // Show the result section
-    block.querySelector('.selfemployeeResult').style.display = 'block';
-}
-
-
-// CCorporation1120 In self Employed Section :
-
-function calculateTotalIncomeCCorporation() {
-    let block = document.getElementById('CCorporation1120');
-    const fields = [
-        "wages_amount_2023", "wages_amount_2022",
-        "capital_gain_amount_2023", "capital_gain_amount_2022",
-        "net_gain_loss_amount_2023", "net_gain_loss_amount_2022",
-        "other_income_loss_amount_2023", "other_income_loss_amount_2022",
-        "depreciation_amount_2023", "depreciation_amount_2022",
-        "depreciation_1120_amount_2023", "depreciation_1120_amount_2022",
-        "depletion_amount_2023", "depletion_amount_2022",
-        "domestic_production_amount_2023", "domestic_production_amount_2022",
-        "net_operating_loss_amount_2023", "net_operating_loss_amount_2022",
-        "other_1120_amount_2023", "other_1120_amount_2022",
-        "special_deduction_amount_2023", "special_deduction_amount_2022",
-        "taxable_income_amount_2023", "taxable_income_amount_2022",
-        "total_tax_amount_2023", "total_tax_amount_2022",
-        "mortgages_notes_bonds_amount_2023", "mortgages_notes_bonds_amount_2022",
-        "travel_entertainment_amount_2023", "travel_entertainment_amount_2022",
-        "dividend_cash_amount_2023", "dividend_cash_amount_2022",
-        "dividend_stock_amount_2023", "dividend_stock_amount_2022",
-        "dividend_property_amount_2023", "dividend_property_amount_2022"
-    ];
-
-    let values = {};
-    let allFieldsFilled = true;
-
-    fields.forEach(field => {
-        let input = document.getElementsByName(field)[0];
-        let value = input ? input.value : '';
-        if (value === '') {
-            allFieldsFilled = false;
-        }
-        values[field] = parseFloat(value) || 0;
-    });
-
-    if (!allFieldsFilled) {
-        alert("Please fill in all fields.");
-        return; // Stop further execution if any field is empty
-    }
-
-    let totalIncome2023 = values.wages_amount_2023 + values.capital_gain_amount_2023 + values.net_gain_loss_amount_2023 -
-        values.other_income_loss_amount_2023 + values.depreciation_amount_2023 + values.depreciation_1120_amount_2023 +
-        values.depletion_amount_2023 + values.domestic_production_amount_2023 + values.other_1120_amount_2023 +
-        values.net_operating_loss_amount_2023 + values.special_deduction_amount_2023 + values.taxable_income_amount_2023 -
-        values.total_tax_amount_2023 - values.mortgages_notes_bonds_amount_2023 - values.travel_entertainment_amount_2023 -
-        values.dividend_cash_amount_2023 - values.dividend_stock_amount_2023 - values.dividend_property_amount_2023;
-
-    let totalIncome2022 = values.wages_amount_2022 + values.capital_gain_amount_2022 + values.net_gain_loss_amount_2022 -
-        values.other_income_loss_amount_2022 + values.depreciation_amount_2022 + values.depreciation_1120_amount_2022 +
-        values.depletion_amount_2022 + values.domestic_production_amount_2022 + values.other_1120_amount_2022 +
-        values.net_operating_loss_amount_2022 + values.special_deduction_amount_2022 + values.taxable_income_amount_2022 -
-        values.total_tax_amount_2022 - values.mortgages_notes_bonds_amount_2022 - values.travel_entertainment_amount_2022 -
-        values.dividend_cash_amount_2022 - values.dividend_stock_amount_2022 - values.dividend_property_amount_2022;
-
-    let monthlyIncome2023 = totalIncome2023 / 12;
-    let monthlyIncome2022 = totalIncome2022 / 12;
-    let twoYearAverage = (totalIncome2023 + totalIncome2022) / 24;
-
-    // Display results
-    block.querySelector('.selfEmployee-earning23').value = totalIncome2023;
-    block.querySelector('.selfEmployee-Monthlyearning23').value = monthlyIncome2023;
-    block.querySelector('.selfEmployee-earning22').value = totalIncome2022;
-    block.querySelector('.selfEmployee-Monthlyearning22').value = monthlyIncome2022;
-    block.querySelector('.selfEmployee-2YearAverage').value = twoYearAverage;
-    // Show the result box
-    block.querySelector('.selfemployeeResult').style.display = 'block';
-}
-
-
-// SCorporation1120S In self Employed Section :
-
-function calculateTotalEarningsSCorp() {
-    let block = document.getElementById('SCorporation1120S');
-
-    // Retrieve values from input fields
-    const fields = [
-        "wages_2023", "wages_2022",
-        "ordinary_income_2023", "ordinary_income_2022",
-        "rental_income_2023", "rental_income_2022",
-        "other_rental_income_2023", "other_rental_income_2022",
-        "distributions_2023", "distributions_2022",
-        "contributions_2023", "contributions_2022",
-        "net_gain_2023", "net_gain_2022",
-        "other_income_2023", "other_income_2022",
-        "depreciation_1120S_2023", "depreciation_1120S_2022",
-        "depreciation_8825_2023", "depreciation_8825_2022",
-        "depletion_2023", "depletion_2022",
-        "other_2023", "other_2022",
-        "mortgages_2023", "mortgages_2022",
-        "travel_entertainment_2023", "travel_entertainment_2022",
-        "months_in_service_2023", "months_in_service_2022",
-        "percent_ownership_2023", "percent_ownership_2022"
-    ];
-
-    let values = {};
-    let allFieldsFilled = true;
-
-    fields.forEach(field => {
-        let input = block.querySelector(`[name="${field}"]`);
-        let value = input ? input.value : '';
-        if (value === '') {
-            allFieldsFilled = false;
-        }
-        values[field] = parseFloat(value) || 0;
-    });
-
-    if (!allFieldsFilled) {
-        alert("Please fill in all fields.");
-        return; // Stop further execution if any field is empty
-    }
-
-    // Populate 2023 Inputs
-    let k1Lines23 = values.ordinary_income_2023 + values.rental_income_2023 + values.other_rental_income_2023;
-    let cashFlowAdjustment23 = values.net_gain_2023 + values.other_income_2023 + values.depreciation_1120S_2023 + values.depreciation_8825_2023;
-    let k1CalculatedIncome23 = (values.wages_2023 + k1Lines23 + cashFlowAdjustment23) * (values.percent_ownership_2023 / 100);
-    let distributedK1CalculatedIncome23 = values.wages_2023 + values.distributions_2023 + values.contributions_2023;
-
-    block.querySelector('.sCorp-earning23').value = values.wages_2023;
-    block.querySelector('.sCorp-K1Lines23').value = k1Lines23;
-    block.querySelector('.sCorp-CashFlowAdjustment23').value = cashFlowAdjustment23;
-    block.querySelector('.sCorp-DistributedW2Income23').value = values.wages_2023;
-    block.querySelector('.sCorp-DistributionslessContributions23').value = values.distributions_2023 + values.contributions_2023;
-    block.querySelector('.sCorp-K1CalculatedIncome23').value = k1CalculatedIncome23;
-    block.querySelector('.sCorp-MonthlyIncome23').value = k1CalculatedIncome23 / 12;
-    block.querySelector('.sCorp-DistributedK1CalculatedIncome23').value = distributedK1CalculatedIncome23;
-    block.querySelector('.sCorp-DistributedMonthlyIncome23').value = distributedK1CalculatedIncome23 / 12;
-
-    // Populate 2022 Inputs
-    let k1Lines22 = values.ordinary_income_2022 + values.rental_income_2022 + values.other_rental_income_2022;
-    let cashFlowAdjustment22 = values.net_gain_2022 + values.other_income_2022 + values.depreciation_1120S_2022 + values.depreciation_8825_2022;
-    let k1CalculatedIncome22 = (values.wages_2022 + k1Lines22 + cashFlowAdjustment22) * (values.percent_ownership_2022 / 100);
-    let distributedK1CalculatedIncome22 = values.wages_2022 + values.distributions_2022 + values.contributions_2022;
-
-    block.querySelector('.sCorp-earning22').value = values.wages_2022;
-    block.querySelector('.sCorp-K1Lines22').value = k1Lines22;
-    block.querySelector('.sCorp-CashFlowAdjustment22').value = cashFlowAdjustment22;
-    block.querySelector('.sCorp-DistributedW2Income22').value = values.wages_2022;
-    block.querySelector('.sCorp-DistributionslessContributions22').value = values.distributions_2022 + values.contributions_2022;
-    block.querySelector('.sCorp-K1CalculatedIncome22').value = k1CalculatedIncome22;
-    block.querySelector('.sCorp-MonthlyIncome22').value = k1CalculatedIncome22 / 12;
-    block.querySelector('.sCorp-DistributedK1CalculatedIncome22').value = distributedK1CalculatedIncome22;
-    block.querySelector('.sCorp-DistributedMonthlyIncome22').value = distributedK1CalculatedIncome22 / 12;
-
-    // Show the result section
-    block.querySelector('.sCorpResult').style.display = 'block';
-}
-
-
-// Partnership1065 In self Employed Section :
-function calculateTotalEarningsPartnership() {
-    // Retrieve the block containing Partnership1065 elements
-    let block = document.getElementById('Partnership1065');
-
-    // Retrieve values from input fields
-    const fields = [
-        "wages_2023", "wages_2022",
-        "ordinary_income_2023", "ordinary_income_2022",
-        "rental_income_2023", "rental_income_2022",
-        "other_rental_income_2023", "other_rental_income_2022",
-        "guaranteed_payments_2023", "guaranteed_payments_2022",
-        "distributions_2023", "distributions_2022",
-        "contributions_2023", "contributions_2022",
-        "ordinary_income_1065_2023", "ordinary_income_1065_2022",
-        "net_farm_profit_2023", "net_farm_profit_2022",
-        "net_gain_form_4797_2023", "net_gain_form_4797_2022",
-        "other_income_1065_2023", "other_income_1065_2022",
-        "depreciation_1065_2023", "depreciation_1065_2022",
-        "depletion_1065_2023", "depletion_1065_2022",
-        "amortization_loss_2023", "amortization_loss_2022",
-        "mortgages_notes_bonds_2023", "mortgages_notes_bonds_2022",
-        "travel_entertainment_2023", "travel_entertainment_2022",
-        "months_in_service_2023", "months_in_service_2022",
-        "percent_ownership_2023", "percent_ownership_2022",
-        "w2_income_2023", "w2_income_2022",
-        "k1_lines_123_2023", "k1_lines_123_2022",
-        "cash_flow_adjustments_2023", "cash_flow_adjustments_2022",
-        "guaranteed_payments_k1_2023", "guaranteed_payments_k1_2022"
-    ];
-
-    let values = {};
-    let allFieldsFilled = true;
-
-    fields.forEach(field => {
-        let input = block.querySelector(`[name="${field}"]`);
-        let value = input ? input.value : '';
-        if (value === '') {
-            allFieldsFilled = false;
-        }
-        values[field] = parseFloat(value) || 0;
-    });
-
-    if (!allFieldsFilled) {
-        alert("Please fill in all fields.");
-        return; // Stop further execution if any field is empty
-    }
-
-    // Populate 2023 Inputs
-    block.querySelector('.partnership-earning23').value = values.wages_2023;
-    block.querySelector('.partnership-DistributionsLessContributions23').value = values.distributions_2023 - values.contributions_2023;
-    block.querySelector('.partnership-GuaranteedPayments23').value = values.guaranteed_payments_2023;
-    block.querySelector('.partnership-K1CalculatedIncome23').value =
-        values.w2_income_2023 + values.k1_lines_123_2023 +
-        values.cash_flow_adjustments_2023 + values.guaranteed_payments_k1_2023;
-    block.querySelector('.partnership-MonthlyIncome23').value =
-        (values.w2_income_2023 + values.k1_lines_123_2023 +
-            values.cash_flow_adjustments_2023 + values.guaranteed_payments_k1_2023) / 12;
-    block.querySelector('.partnership-DistributedK1CalculatedIncome23').value =
-        values.wages_2023 + (values.distributions_2023 - values.contributions_2023) +
-        values.guaranteed_payments_k1_2023;
-    block.querySelector('.partnership-DistributedMonthlyIncome23').value =
-        (values.wages_2023 + (values.distributions_2023 - values.contributions_2023) +
-            values.guaranteed_payments_k1_2023) / 12;
-
-    // Populate 2022 Inputs
-    block.querySelector('.partnership-earning22').value = values.wages_2022;
-    block.querySelector('.partnership-DistributionsLessContributions22').value = values.distributions_2022 - values.contributions_2022;
-    block.querySelector('.partnership-GuaranteedPayments22').value = values.guaranteed_payments_2022;
-    block.querySelector('.partnership-K1CalculatedIncome22').value =
-        values.w2_income_2022 + values.k1_lines_123_2022 +
-        values.cash_flow_adjustments_2022 + values.guaranteed_payments_k1_2022;
-    block.querySelector('.partnership-MonthlyIncome22').value =
-        (values.w2_income_2022 + values.k1_lines_123_2022 +
-            values.cash_flow_adjustments_2022 + values.guaranteed_payments_k1_2022) / 12;
-    block.querySelector('.partnership-DistributedK1CalculatedIncome22').value =
-        values.wages_2022 + (values.distributions_2022 - values.contributions_2022) +
-        values.guaranteed_payments_k1_2022;
-    block.querySelector('.partnership-DistributedMonthlyIncome22').value =
-        (values.wages_2022 + (values.distributions_2022 - values.contributions_2022) +
-            values.guaranteed_payments_k1_2022) / 12;
-
-    // Display results block
-    block.querySelector('.partnershipResult').style.display = "block";
-}
+</html>
