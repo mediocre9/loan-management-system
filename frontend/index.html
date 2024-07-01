@@ -1244,7 +1244,6 @@
 
     <script>
 
-
         const employmentSummary = {
             borrowerName: "",
             gaps: [],
@@ -1336,20 +1335,24 @@ income.`;
             let endDate = moment(end);
             let gapInfo = {};
 
-            s.add(start);
-            e.add(end);
+
+            s.add(JSON.stringify({ startDate, endDate }));
+
+            console.log("Unsorted", [...s]);
+            console.log("Sorted", [...s].map(e => JSON.parse(e)).sort((a, b) => moment(a.startDate).diff(b.startDate)));
 
             duration = Math.round(endDate.diff(startDate, "months", true));
 
             if (withGap) {
-                let startDate = [...s];
-                let endDate = [...e];
-                gap = Math.abs(Math.round(moment(endDate[endDate.length - 2]).diff(moment(startDate[startDate.length - 1]), "months")));
+                let dates = [...s].map(e => JSON.parse(e)).sort((a, b) => moment(a.startDate).diff(b.startDate));
+                // let endDate = [...e].map(e => JSON.parse(e));
 
+
+                gap = Math.abs(Math.round(moment(dates[dates.length - 2].endDate).diff(moment(dates[dates.length - 1].startDate), "months")));
 
                 if (gap > 0) {
-                    const a = startDate[startDate.length - 1];
-                    const b = endDate[endDate.length - 2];
+                    const a = dates[dates.length - 1].startDate;
+                    const b = dates[dates.length - 2].endDate;
                     const startOfTheMonth = moment(b).add(1, 'day').format("l");
                     const endOfTheMonth = moment(a).subtract(1, 'day').format("l");
                     gapInfo = {
@@ -1454,7 +1457,10 @@ income.`;
                                 const { gapInfo } = calculateMonths(startDate, endDate, { withGap: true });
                                 const { gap, startOfTheMonth, endOfTheMonth } = gapInfo;
                                 totalGap += gap;
-                                gaps.push({ totalGap, startOfTheMonth, endOfTheMonth });
+
+                                if (totalGap > 0) {
+                                    gaps.push({ totalGap, startOfTheMonth, endOfTheMonth });
+                                }
                             }
 
                             employers.push(employerName.value.toString());
@@ -1542,6 +1548,8 @@ income.`;
             positions = [];
             gaps = [];
             durations = [];
+            s.clear();
+            e.clear();
 
             summarySectionIntro.innerText = "";
             summarySectionDuration.innerText = "";
