@@ -1244,7 +1244,6 @@
 
     <script>
 
-
         const employmentSummary = {
             borrowerName: "",
             gaps: [],
@@ -1315,10 +1314,8 @@ income.`;
         const summarySectionGaps = document.getElementById("summary-section-gap");
         const incomeAnalysisSection = document.getElementById("income-analysis-section");
 
-        let s = new Set();
-        let e = new Set();
+        // let e = new Set();
         let duration = 0;
-        let gap = 0;
         let totalMonths = 0;
         let totalGap = 0;
 
@@ -1331,38 +1328,67 @@ income.`;
             incomeType
         } = employmentSummary;
 
-        function calculateMonths(start, end, { withGap = false } = {}) {
+
+        const calculateTotalMonths = (start, end) => {
             let startDate = moment(start);
             let endDate = moment(end);
-            let gapInfo = {};
 
-            s.add(start);
-            e.add(end);
+            return Math.round(endDate.diff(startDate, "months", true));
+        }
 
-            duration = Math.round(endDate.diff(startDate, "months", true));
+        let s = new Set();
+        function* calculateGaps(start, end, isCurrentJob) {
+            let startDate = moment(start);
+            let endDate = moment(end);
+            let gapInfo = null;
+            let gap = 0;
+            let isInvalid = false;
 
-            if (withGap) {
-                let startDate = [...s];
-                let endDate = [...e];
-                gap = Math.abs(Math.round(moment(endDate[endDate.length - 2]).diff(moment(startDate[startDate.length - 1]), "months")));
+            s.add(JSON.stringify({ startDate, endDate, isCurrentJob }));
+
+            let dates = [...s].map(e => JSON.parse(e)).sort((a, b) => moment(a.startDate).diff(b.startDate));
+
+            for (let i = 0; i < dates.length - 1; i++) {
+
+                if ((dates[i].endDate > dates[i + 1].startDate) && dates[i].isCurrentJob) {
+                    console.log("INVALID");
+                    isInvalid = true;
+                }
+
+                if (dates[i].endDate > dates[i + 1].startDate && !dates[i].isCurrentJob) {
+                    gap = Math.abs(Math.round(moment(dates[i + 1].startDate).diff(dates[i].endDate, "months")));
+                }
+
+                if (dates[i].endDate < dates[i + 1].startDate) {
+                    gap = Math.abs(Math.round(moment(dates[i].endDate).diff(dates[i + 1].startDate, "months")));
+                }
 
 
-                if (gap > 0) {
-                    const a = startDate[startDate.length - 1];
-                    const b = endDate[endDate.length - 2];
-                    const startOfTheMonth = moment(b).add(1, 'day').format("l");
-                    const endOfTheMonth = moment(a).subtract(1, 'day').format("l");
-                    gapInfo = {
-                        gap,
-                        startOfTheMonth,
-                        endOfTheMonth,
+                console.log("Sorted", dates);
+
+                if (!isInvalid) {
+                    if (gap > 0) {
+                        let a;
+                        let b;
+
+                        if (dates[i].endDate < dates[i + 1].startDate) {
+                            a = dates[i + 1].startDate;
+                            b = dates[i].endDate;
+                        } else {
+                            a = dates[i].startDate;
+                            b = dates[i + 1].endDate;
+                        }
+                        const startOfTheMonth = moment(b).add(1, 'day').format("l");
+                        const endOfTheMonth = moment(a).subtract(1, 'day').format("l");
+                        yield gapInfo = {
+                            gap,
+                            startOfTheMonth,
+                            endOfTheMonth
+                        }
                     }
                 }
             }
-            return { duration, gapInfo };
         }
-
-
 
         $(document).ready(function () {
             var base_color = "rgb(230,230,230)";
@@ -1432,12 +1458,14 @@ income.`;
                     }
 
 
+
                     if (child === 2) {
                         const name = document.querySelector(".additionalBorrowerName")
                         const employmentBlocks = document.querySelectorAll(".additionalEmploymentBlock");
                         borrowerName = name.value.toString();
 
                         employmentBlocks.forEach((block, index) => {
+                            console.log("CALLED");
                             const employerName = block.querySelector(".additionalEmployerName");
                             const position = block.querySelector(".additionalPosition");
                             const startDateInput = block.querySelector('.additionalStartDate').value;
@@ -1446,17 +1474,19 @@ income.`;
 
                             const startDate = new Date(startDateInput);
                             const endDate = isCurrentJob ? new Date() : new Date(endDateInput);
-                            const { duration } = calculateMonths(startDate, endDate);
+
+                            const duration = calculateTotalMonths(startDate, endDate);
                             totalMonths += duration;
                             durations.push({ totalMonths, startDate, endDate, isCurrentJob });
+                            const gapInfo = calculateGaps(startDate, endDate, isCurrentJob).next().value;
 
-                            if (index > 0) {
-                                const { gapInfo } = calculateMonths(startDate, endDate, { withGap: true });
+                            if (gapInfo) {
                                 const { gap, startOfTheMonth, endOfTheMonth } = gapInfo;
                                 totalGap += gap;
-                                gaps.push({ totalGap, startOfTheMonth, endOfTheMonth });
+                                gaps.push({ gap, startOfTheMonth, endOfTheMonth });
+                                gaps = gaps.filter(e => e.startOfTheMonth && e.endOfTheMonth);
+                                console.log("MAIN GAPS", gaps.length, "GAP VALUE", gap, "TOTAL GAP VALUE", totalGap);
                             }
-
                             employers.push(employerName.value.toString());
                             positions.push(position.value.toString());
                         });
@@ -1469,20 +1499,20 @@ income.`;
                         console.log("Positions ", positions);
                         console.log("Durations ", durations);
 
-                        // const sourceOfIncomeType = incomeType[defaultIncomeType];
+                        const sourceOfIncomeType = incomeType[defaultIncomeType];
 
-                        // Object.keys(incomeType).forEach((type) => {
-                        //     switch (type) {
-                        //         case "hourly":
-                        //         case "salary":
-                        //             console.log(incomeAnalysisTypes.base(sourceOfIncomeType));
-                        //             incomeAnalysisSection.innerText = incomeAnalysisTypes.base(sourceOfIncomeType);
-                        //             break;
+                        Object.keys(incomeType).forEach((type) => {
+                            switch (type) {
+                                case "hourly":
+                                case "salary":
+                                    console.log(incomeAnalysisTypes.base(sourceOfIncomeType));
+                                    incomeAnalysisSection.innerText = incomeAnalysisTypes.base(sourceOfIncomeType);
+                                    break;
 
-                        //         default:
-                        //             break;
-                        //     }
-                        // });
+                                default:
+                                    break;
+                            }
+                        });
 
 
                         employers.forEach((employer, i) => {
@@ -1507,13 +1537,12 @@ income.`;
                         summarySectionDuration.innerText = `Total Month(s): ${durations[durations.length - 1].totalMonths
                             }`;
 
-                        summarySectionGaps.innerText = `Total Gap: ${gaps.length > 0 ? gaps[gaps.length - 1].totalGap : 0} month(s).`;
+                        summarySectionGaps.innerText = `Total Gap: ${totalGap} month(s).`;
                     }
                 } else if (id == "prev") {
-                    clearAllData();
-
                     $("#next").removeClass("disabled");
                     $("#submit").addClass("disabled");
+
                     if (child <= 2) {
                         $(this).addClass("disabled");
                     }
@@ -1542,6 +1571,7 @@ income.`;
             positions = [];
             gaps = [];
             durations = [];
+            s.clear();
 
             summarySectionIntro.innerText = "";
             summarySectionDuration.innerText = "";
