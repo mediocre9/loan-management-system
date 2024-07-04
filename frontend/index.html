@@ -8,9 +8,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Logic Links</title>
     <link rel="stylesheet" href="style.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+        integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment-with-locales.min.js" integrity="sha512-4F1cxYdMiAW98oomSLaygEwmCnIP38pb4Kx70yQYqRwLVCs3DbRumfBq82T08g/4LJ/smbFGFpmeFlQgoDccgg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment-with-locales.min.js"
+        integrity="sha512-4F1cxYdMiAW98oomSLaygEwmCnIP38pb4Kx70yQYqRwLVCs3DbRumfBq82T08g/4LJ/smbFGFpmeFlQgoDccgg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <style>
         table {
             width: 100%;
@@ -32,6 +36,11 @@
             width: 100%;
             box-sizing: border-box;
         }
+
+        #summary-section-previous-employments,
+        #summary-section-current-employments {
+            display: none;
+        }
     </style>
 </head>
 
@@ -43,16 +52,22 @@
         <div id="additionalEmploymentContainer">
             <div class="additionalEmploymentBlock">
                 <strong class="strongSubHeading">Current Employer</strong>
-                <input type="text" class="additionalBorrowerName" onblur="ValidateInputs(this,event)" placeholder="Borrower Name" />
-                <input type="text" class="additionalEmployerName" placeholder="Employer Name" onblur="ValidateInputs(this,event)" />
+                <input type="text" class="additionalBorrowerName" onblur="ValidateInputs(this,event)"
+                    placeholder="Borrower Name" />
+                <input type="text" class="additionalEmployerName" placeholder="Employer Name"
+                    onblur="ValidateInputs(this,event)" />
 
-                <input type="text" class="additionalPosition" placeholder="Position" onblur="ValidateInputs(this,event)" />
+                <input type="text" class="additionalPosition" placeholder="Position"
+                    onblur="ValidateInputs(this,event)" />
                 <div style="display: flex; align-items: center">
-                    <input type="checkbox" name="" class="CurrenPositionCheck" style="width: 17px; height: 20px; margin-right: 10px" onblur="currentJob(this)" />
+                    <input type="checkbox" name="" class="CurrenPositionCheck"
+                        style="width: 17px; height: 20px; margin-right: 10px" onblur="currentJob(this)" />
                     <label for="CurrenPositionCheck">Current Position</label>
                 </div>
-                <input onfocus="(this.type='date')" onblur="ValidateInputs(this,event)" class="additionalStartDate" placeholder="Start Date" />
-                <input onfocus="(this.type='date')" onblur="ValidateInputs(this,event)" class="additionalEndDate" placeholder="End Date" />
+                <input onfocus="(this.type='date')" onblur="ValidateInputs(this,event)" class="additionalStartDate"
+                    placeholder="Start Date" />
+                <input onfocus="(this.type='date')" onblur="ValidateInputs(this,event)" class="additionalEndDate"
+                    placeholder="End Date" />
 
                 <p class="errorMessage"></p>
             </div>
@@ -63,14 +78,17 @@
                 <strong class="strongSubHeading">School Details</strong>
                 <input type="text" class="SchoolName" placeholder="School Name" />
                 <input type="text" class="Degree" placeholder="Degree" />
-                <input onfocus="(this.type='date')" onblur="checkDateRange()" class="additionalStartDate" placeholder="Start Date" />
-                <input onfocus="(this.type='date')" onblur="checkDateRange()" class="additionalEndDate" placeholder="End Date" />
+                <input onfocus="(this.type='date')" onblur="checkDateRange()" class="additionalStartDate"
+                    placeholder="Start Date" />
+                <input onfocus="(this.type='date')" onblur="checkDateRange()" class="additionalEndDate"
+                    placeholder="End Date" />
                 <p class="errorMessage"></p>
             </div>
         </template>
         <div id="schoolTogl" style="display: none">
             <div style="display: flex; align-items: center">
-                <input type="checkbox" id="SchoolChecker" style="width: 17px; height: 20px; margin-right: 10px" onblur="toggleSchoolFields(this)" />
+                <input type="checkbox" id="SchoolChecker" style="width: 17px; height: 20px; margin-right: 10px"
+                    onblur="toggleSchoolFields(this)" />
                 <div>I Was in School ! No Previous Employment</div>
             </div>
         </div>
@@ -96,13 +114,17 @@
                 <div class="SalaryBlocks">
                     <strong class="strongSubHeading" style="margin-bottom: 10px">Salary</strong>
                     <label for="">Pay Period Start Date </label>
-                    <input placeholder="Pay Period Start Date" onfocus="(this.type='date')" onblur="validateSalaryInputs(this,event)" class="SalaryStartDate" />
+                    <input placeholder="Pay Period Start Date" onfocus="(this.type='date')"
+                        onblur="validateSalaryInputs(this,event)" class="SalaryStartDate" />
                     <label for="">Pay Period End Date</label>
-                    <input placeholder="Pay Period End Date" onfocus="(this.type='date')" onblur="validateSalaryInputs(this,event)" class="SalaryEndDate" />
+                    <input placeholder="Pay Period End Date" onfocus="(this.type='date')"
+                        onblur="validateSalaryInputs(this,event)" class="SalaryEndDate" />
                     <label for="">Current Gross Base Pay</label>
-                    <input type="number" placeholder="Current Gross Base Pay" class="currentGrossPay" onblur="validateSalaryInputs(this,event)" />
+                    <input type="number" placeholder="Current Gross Base Pay" class="currentGrossPay"
+                        onblur="validateSalaryInputs(this,event)" />
                     <label for="">YTD Gross Base Pay</label>
-                    <input type="number" placeholder="YTD Gross Base Pay" class="YTDGrossPays" onblur="validateSalaryInputs(this,event)" />
+                    <input type="number" placeholder="YTD Gross Base Pay" class="YTDGrossPays"
+                        onblur="validateSalaryInputs(this,event)" />
                     <div class="consoleData" style="display: none">
                         <input type="hidden" class="newYTD" />
                         <label for="">Validated Income</label>
@@ -127,9 +149,11 @@
                 <div class="hourlyBlocks">
                     <strong class="strongSubHeading" style="margin-bottom: 10px">Hourly</strong>
                     <label for="">Pay Period Start Date </label>
-                    <input onfocus="(this.type='date')" onblur="validateHourlyInputs(this,event)" class="hourlyStartDate" />
+                    <input onfocus="(this.type='date')" onblur="validateHourlyInputs(this,event)"
+                        class="hourlyStartDate" />
                     <label for="">Pay Period End Date</label>
-                    <input onfocus="(this.type='date')" onblur="validateHourlyInputs(this,event)" class="hourlyEndDate" />
+                    <input onfocus="(this.type='date')" onblur="validateHourlyInputs(this,event)"
+                        class="hourlyEndDate" />
                     <label for="">Hourly Rate</label>
                     <input type="number" class="hourlyRate" onblur="validateHourlyInputs(this,event)" />
                     <label for="">Current Hours Base Pay (include Holiday, Sick, PTO)</label>
@@ -266,7 +290,8 @@
             </style>
             <div class="wrpper-basePay" style="display: none">
                 <div id="varPay">
-                    <strong style="margin-top: 10px; display: inline-block">What type of variable pay do we have?</strong>
+                    <strong style="margin-top: 10px; display: inline-block">What type of variable pay do we
+                        have?</strong>
                     <p style="margin-top: 5px; margin-bottom: 5px">You should be able to check all that apply</p>
                     <form class="checkbox-container">
                         <label class="checkbox-label">
@@ -318,7 +343,8 @@
                             <span class="checkbox-text">Detention Pay</span>
                         </label>
                         <label class="checkbox-label">
-                            <input type="checkbox" class="custom-checkbox" name="compensation" value="Accessorial Pay" />
+                            <input type="checkbox" class="custom-checkbox" name="compensation"
+                                value="Accessorial Pay" />
                             <span class="checkbox-text">Accessorial Pay</span>
                         </label>
                     </form>
@@ -367,10 +393,12 @@
                             <tr>
                                 <td>Nonrecurring Other Income - Part 1, Line 6</td>
                                 <td>
-                                    <input type="number" class="input-field" name="nonrecurring_income_2023" value="1500" />
+                                    <input type="number" class="input-field" name="nonrecurring_income_2023"
+                                        value="1500" />
                                 </td>
                                 <td>
-                                    <input type="number" class="input-field" name="nonrecurring_income_2022" value="0" />
+                                    <input type="number" class="input-field" name="nonrecurring_income_2022"
+                                        value="0" />
                                 </td>
                             </tr>
                             <tr>
@@ -403,10 +431,12 @@
                             <tr>
                                 <td>Meals & Entertainment - Line 24B</td>
                                 <td>
-                                    <input type="number" class="input-field" name="meals_entertainment_2023" value="1500" />
+                                    <input type="number" class="input-field" name="meals_entertainment_2023"
+                                        value="1500" />
                                 </td>
                                 <td>
-                                    <input type="number" class="input-field" name="meals_entertainment_2022" value="1800" />
+                                    <input type="number" class="input-field" name="meals_entertainment_2022"
+                                        value="1800" />
                                 </td>
                             </tr>
                             <tr>
@@ -421,10 +451,12 @@
                             <tr>
                                 <td>Business Use of Home - Line 30</td>
                                 <td>
-                                    <input type="number" class="input-field" name="business_use_home_2023" value="8500" />
+                                    <input type="number" class="input-field" name="business_use_home_2023"
+                                        value="8500" />
                                 </td>
                                 <td>
-                                    <input type="number" class="input-field" name="business_use_home_2022" value="8500" />
+                                    <input type="number" class="input-field" name="business_use_home_2022"
+                                        value="8500" />
                                 </td>
                             </tr>
                         </tbody>
@@ -479,154 +511,188 @@
                             <tr>
                                 <td>Capital Gain Income or Loss</td>
                                 <td>
-                                    <input type="number" class="input-field" name="capital_gain_amount_2023" value="35000" />
+                                    <input type="number" class="input-field" name="capital_gain_amount_2023"
+                                        value="35000" />
                                 </td>
                                 <td>
-                                    <input type="number" class="input-field" name="capital_gain_amount_2022" value="35000" />
+                                    <input type="number" class="input-field" name="capital_gain_amount_2022"
+                                        value="35000" />
                                 </td>
                             </tr>
                             <tr>
                                 <td>Net Gain or Loss (Form 4797)</td>
                                 <td>
-                                    <input type="number" class="input-field" name="net_gain_loss_amount_2023" value="5000" />
+                                    <input type="number" class="input-field" name="net_gain_loss_amount_2023"
+                                        value="5000" />
                                 </td>
                                 <td>
-                                    <input type="number" class="input-field" name="net_gain_loss_amount_2022" value="5000" />
+                                    <input type="number" class="input-field" name="net_gain_loss_amount_2022"
+                                        value="5000" />
                                 </td>
                             </tr>
                             <tr>
                                 <td>Other Income or Loss</td>
                                 <td>
-                                    <input type="number" class="input-field" name="other_income_loss_amount_2023" value="5000" />
+                                    <input type="number" class="input-field" name="other_income_loss_amount_2023"
+                                        value="5000" />
                                 </td>
                                 <td>
-                                    <input type="number" class="input-field" name="other_income_loss_amount_2022" value="5000" />
+                                    <input type="number" class="input-field" name="other_income_loss_amount_2022"
+                                        value="5000" />
                                 </td>
                             </tr>
                             <tr>
                                 <td>Depreciation</td>
                                 <td>
-                                    <input type="number" class="input-field" name="depreciation_amount_2023" value="5000" />
+                                    <input type="number" class="input-field" name="depreciation_amount_2023"
+                                        value="5000" />
                                 </td>
                                 <td>
-                                    <input type="number" class="input-field" name="depreciation_amount_2022" value="5000" />
+                                    <input type="number" class="input-field" name="depreciation_amount_2022"
+                                        value="5000" />
                                 </td>
                             </tr>
                             <tr>
                                 <td>Depreciation 1120</td>
                                 <td>
-                                    <input type="number" class="input-field" name="depreciation_1120_amount_2023" value="5000" />
+                                    <input type="number" class="input-field" name="depreciation_1120_amount_2023"
+                                        value="5000" />
                                 </td>
                                 <td>
-                                    <input type="number" class="input-field" name="depreciation_1120_amount_2022" value="5000" />
+                                    <input type="number" class="input-field" name="depreciation_1120_amount_2022"
+                                        value="5000" />
                                 </td>
                             </tr>
                             <tr>
                                 <td>Depletion</td>
                                 <td>
-                                    <input type="number" class="input-field" name="depletion_amount_2023" value="5000" />
+                                    <input type="number" class="input-field" name="depletion_amount_2023"
+                                        value="5000" />
                                 </td>
                                 <td>
-                                    <input type="number" class="input-field" name="depletion_amount_2022" value="5000" />
+                                    <input type="number" class="input-field" name="depletion_amount_2022"
+                                        value="5000" />
                                 </td>
                             </tr>
                             <tr>
                                 <td>Domestic Production Activities</td>
                                 <td>
-                                    <input type="number" class="input-field" name="domestic_production_amount_2023" value="5000" />
+                                    <input type="number" class="input-field" name="domestic_production_amount_2023"
+                                        value="5000" />
                                 </td>
                                 <td>
-                                    <input type="number" class="input-field" name="domestic_production_amount_2022" value="5000" />
+                                    <input type="number" class="input-field" name="domestic_production_amount_2022"
+                                        value="5000" />
                                 </td>
                             </tr>
                             <tr>
                                 <td>Other - 1120</td>
                                 <td>
-                                    <input type="number" class="input-field" name="other_1120_amount_2023" value="5000" />
+                                    <input type="number" class="input-field" name="other_1120_amount_2023"
+                                        value="5000" />
                                 </td>
                                 <td>
-                                    <input type="number" class="input-field" name="other_1120_amount_2022" value="5000" />
+                                    <input type="number" class="input-field" name="other_1120_amount_2022"
+                                        value="5000" />
                                 </td>
                             </tr>
                             <tr>
                                 <td>Net Operating Loss</td>
                                 <td>
-                                    <input type="number" class="input-field" name="net_operating_loss_amount_2023" value="5000" />
+                                    <input type="number" class="input-field" name="net_operating_loss_amount_2023"
+                                        value="5000" />
                                 </td>
                                 <td>
-                                    <input type="number" class="input-field" name="net_operating_loss_amount_2022" value="5000" />
+                                    <input type="number" class="input-field" name="net_operating_loss_amount_2022"
+                                        value="5000" />
                                 </td>
                             </tr>
                             <tr>
                                 <td>Special Deduction</td>
                                 <td>
-                                    <input type="number" class="input-field" name="special_deduction_amount_2023" value="5000" />
+                                    <input type="number" class="input-field" name="special_deduction_amount_2023"
+                                        value="5000" />
                                 </td>
                                 <td>
-                                    <input type="number" class="input-field" name="special_deduction_amount_2022" value="5000" />
+                                    <input type="number" class="input-field" name="special_deduction_amount_2022"
+                                        value="5000" />
                                 </td>
                             </tr>
                             <tr>
                                 <td>Taxable Income</td>
                                 <td>
-                                    <input type="number" class="input-field" name="taxable_income_amount_2023" value="5000" />
+                                    <input type="number" class="input-field" name="taxable_income_amount_2023"
+                                        value="5000" />
                                 </td>
                                 <td>
-                                    <input type="number" class="input-field" name="taxable_income_amount_2022" value="5000" />
+                                    <input type="number" class="input-field" name="taxable_income_amount_2022"
+                                        value="5000" />
                                 </td>
                             </tr>
                             <tr>
                                 <td>Total Tax</td>
                                 <td>
-                                    <input type="number" class="input-field" name="total_tax_amount_2023" value="10000" />
+                                    <input type="number" class="input-field" name="total_tax_amount_2023"
+                                        value="10000" />
                                 </td>
                                 <td>
-                                    <input type="number" class="input-field" name="total_tax_amount_2022" value="10000" />
+                                    <input type="number" class="input-field" name="total_tax_amount_2022"
+                                        value="10000" />
                                 </td>
                             </tr>
                             <tr>
                                 <td>Mortgages, Notes, Bonds payable in less than 1 year</td>
                                 <td>
-                                    <input type="number" class="input-field" name="mortgages_notes_bonds_amount_2023" value="10000" />
+                                    <input type="number" class="input-field" name="mortgages_notes_bonds_amount_2023"
+                                        value="10000" />
                                 </td>
                                 <td>
-                                    <input type="number" class="input-field" name="mortgages_notes_bonds_amount_2022" value="10000" />
+                                    <input type="number" class="input-field" name="mortgages_notes_bonds_amount_2022"
+                                        value="10000" />
                                 </td>
                             </tr>
                             <tr>
                                 <td>Travel & Entertainment</td>
                                 <td>
-                                    <input type="number" class="input-field" name="travel_entertainment_amount_2023" value="10000" />
+                                    <input type="number" class="input-field" name="travel_entertainment_amount_2023"
+                                        value="10000" />
                                 </td>
                                 <td>
-                                    <input type="number" class="input-field" name="travel_entertainment_amount_2022" value="10000" />
+                                    <input type="number" class="input-field" name="travel_entertainment_amount_2022"
+                                        value="10000" />
                                 </td>
                             </tr>
                             <tr>
                                 <td>Dividend Cash</td>
                                 <td>
-                                    <input type="number" class="input-field" name="dividend_cash_amount_2023" value="10000" />
+                                    <input type="number" class="input-field" name="dividend_cash_amount_2023"
+                                        value="10000" />
                                 </td>
                                 <td>
-                                    <input type="number" class="input-field" name="dividend_cash_amount_2022" value="10000" />
+                                    <input type="number" class="input-field" name="dividend_cash_amount_2022"
+                                        value="10000" />
                                 </td>
                             </tr>
                             <tr>
                                 <td>Dividend Stock</td>
                                 <td>
-                                    <input type="number" class="input-field" name="dividend_stock_amount_2023" value="10000" />
+                                    <input type="number" class="input-field" name="dividend_stock_amount_2023"
+                                        value="10000" />
                                 </td>
                                 <td>
-                                    <input type="number" class="input-field" name="dividend_stock_amount_2022" value="10000" />
+                                    <input type="number" class="input-field" name="dividend_stock_amount_2022"
+                                        value="10000" />
                                 </td>
                             </tr>
                             <tr>
                                 <td>Dividend Property</td>
                                 <td>
-                                    <input type="number" class="input-field" name="dividend_property_amount_2023" value="10000" />
+                                    <input type="number" class="input-field" name="dividend_property_amount_2023"
+                                        value="10000" />
                                 </td>
                                 <td>
-                                    <input type="number" class="input-field" name="dividend_property_amount_2022" value="10000" />
+                                    <input type="number" class="input-field" name="dividend_property_amount_2022"
+                                        value="10000" />
                                 </td>
                             </tr>
                         </tbody>
@@ -691,10 +757,12 @@
                             <tr>
                                 <td>Ordinary Business Income or Loss - K1 Line 1</td>
                                 <td>
-                                    <input type="number" class="input-field" name="ordinary_income_2023" value="25000" />
+                                    <input type="number" class="input-field" name="ordinary_income_2023"
+                                        value="25000" />
                                 </td>
                                 <td>
-                                    <input type="number" class="input-field" name="ordinary_income_2022" value="25000" />
+                                    <input type="number" class="input-field" name="ordinary_income_2022"
+                                        value="25000" />
                                 </td>
                             </tr>
                             <tr>
@@ -709,10 +777,12 @@
                             <tr>
                                 <td>Other Rental Income or Loss - K1 Line 3</td>
                                 <td>
-                                    <input type="number" class="input-field" name="other_rental_income_2023" value="5000" />
+                                    <input type="number" class="input-field" name="other_rental_income_2023"
+                                        value="5000" />
                                 </td>
                                 <td>
-                                    <input type="number" class="input-field" name="other_rental_income_2022" value="5000" />
+                                    <input type="number" class="input-field" name="other_rental_income_2022"
+                                        value="5000" />
                                 </td>
                             </tr>
                             <tr>
@@ -806,10 +876,12 @@
                             <tr>
                                 <td>Travel & Entertainment - Schedule M-1 Line 3B</td>
                                 <td>
-                                    <input type="number" class="input-field" name="travel_entertainment_2023" value="-5000" />
+                                    <input type="number" class="input-field" name="travel_entertainment_2023"
+                                        value="-5000" />
                                 </td>
                                 <td>
-                                    <input type="number" class="input-field" name="travel_entertainment_2022" value="-5000" />
+                                    <input type="number" class="input-field" name="travel_entertainment_2022"
+                                        value="-5000" />
                                 </td>
                             </tr>
 
@@ -831,10 +903,12 @@
                             <tr>
                                 <td>Percent Ownership</td>
                                 <td>
-                                    <input type="number" class="input-field" name="percent_ownership_2023" value="100" />
+                                    <input type="number" class="input-field" name="percent_ownership_2023"
+                                        value="100" />
                                 </td>
                                 <td>
-                                    <input type="number" class="input-field" name="percent_ownership_2022" value="100" />
+                                    <input type="number" class="input-field" name="percent_ownership_2022"
+                                        value="100" />
                                 </td>
                             </tr>
                         </tbody>
@@ -945,19 +1019,23 @@
                             <tr>
                                 <td>Other Rental Income or Loss - K1 Line 3</td>
                                 <td>
-                                    <input type="number" class="input-field" name="other_rental_income_2023" value="1" />
+                                    <input type="number" class="input-field" name="other_rental_income_2023"
+                                        value="1" />
                                 </td>
                                 <td>
-                                    <input type="number" class="input-field" name="other_rental_income_2022" value="1" />
+                                    <input type="number" class="input-field" name="other_rental_income_2022"
+                                        value="1" />
                                 </td>
                             </tr>
                             <tr>
                                 <td>Guaranteed Payments - K-1 Line 4 or 4c on 2019+</td>
                                 <td>
-                                    <input type="number" class="input-field" name="guaranteed_payments_2023" value="5000" />
+                                    <input type="number" class="input-field" name="guaranteed_payments_2023"
+                                        value="5000" />
                                 </td>
                                 <td>
-                                    <input type="number" class="input-field" name="guaranteed_payments_2022" value="5000" />
+                                    <input type="number" class="input-field" name="guaranteed_payments_2022"
+                                        value="5000" />
                                 </td>
                             </tr>
                             <tr>
@@ -988,10 +1066,12 @@
                             <tr>
                                 <td>Ordinary Income or Loss (1065 Line 4)</td>
                                 <td>
-                                    <input type="number" class="input-field" name="ordinary_income_1065_2023" value="10" />
+                                    <input type="number" class="input-field" name="ordinary_income_1065_2023"
+                                        value="10" />
                                 </td>
                                 <td>
-                                    <input type="number" class="input-field" name="ordinary_income_1065_2022" value="10" />
+                                    <input type="number" class="input-field" name="ordinary_income_1065_2022"
+                                        value="10" />
                                 </td>
                             </tr>
                             <tr>
@@ -1006,10 +1086,12 @@
                             <tr>
                                 <td>Net Gain Form 4797 (1065 Line 6)</td>
                                 <td>
-                                    <input type="number" class="input-field" name="net_gain_form_4797_2023" value="10" />
+                                    <input type="number" class="input-field" name="net_gain_form_4797_2023"
+                                        value="10" />
                                 </td>
                                 <td>
-                                    <input type="number" class="input-field" name="net_gain_form_4797_2022" value="10" />
+                                    <input type="number" class="input-field" name="net_gain_form_4797_2022"
+                                        value="10" />
                                 </td>
                             </tr>
                             <tr>
@@ -1051,19 +1133,23 @@
                             <tr>
                                 <td>Mortgages, Notes, Bonds payable in less than 1 year (Sch-L Line 16d)</td>
                                 <td>
-                                    <input type="number" class="input-field" name="mortgages_notes_bonds_2023" value="-10" />
+                                    <input type="number" class="input-field" name="mortgages_notes_bonds_2023"
+                                        value="-10" />
                                 </td>
                                 <td>
-                                    <input type="number" class="input-field" name="mortgages_notes_bonds_2022" value="-10" />
+                                    <input type="number" class="input-field" name="mortgages_notes_bonds_2022"
+                                        value="-10" />
                                 </td>
                             </tr>
                             <tr>
                                 <td>Travel & Entertainment (Sch-M1 Line 4b)</td>
                                 <td>
-                                    <input type="number" class="input-field" name="travel_entertainment_2023" value="-10" />
+                                    <input type="number" class="input-field" name="travel_entertainment_2023"
+                                        value="-10" />
                                 </td>
                                 <td>
-                                    <input type="number" class="input-field" name="travel_entertainment_2022" value="-10" />
+                                    <input type="number" class="input-field" name="travel_entertainment_2022"
+                                        value="-10" />
                                 </td>
                             </tr>
 
@@ -1085,10 +1171,12 @@
                             <tr>
                                 <td>Percent Ownership</td>
                                 <td>
-                                    <input type="number" class="input-field" name="percent_ownership_2023" value="100" />
+                                    <input type="number" class="input-field" name="percent_ownership_2023"
+                                        value="100" />
                                 </td>
                                 <td>
-                                    <input type="number" class="input-field" name="percent_ownership_2022" value="100" />
+                                    <input type="number" class="input-field" name="percent_ownership_2022"
+                                        value="100" />
                                 </td>
                             </tr>
 
@@ -1119,19 +1207,23 @@
                             <tr>
                                 <td>Cash Flow Adjustments</td>
                                 <td>
-                                    <input type="number" class="input-field" name="cash_flow_adjustments_2023" value="50" />
+                                    <input type="number" class="input-field" name="cash_flow_adjustments_2023"
+                                        value="50" />
                                 </td>
                                 <td>
-                                    <input type="number" class="input-field" name="cash_flow_adjustments_2022" value="50" />
+                                    <input type="number" class="input-field" name="cash_flow_adjustments_2022"
+                                        value="50" />
                                 </td>
                             </tr>
                             <tr>
                                 <td>Guaranteed Payments</td>
                                 <td>
-                                    <input type="number" class="input-field" name="guaranteed_payments_k1_2023" value="5000" />
+                                    <input type="number" class="input-field" name="guaranteed_payments_k1_2023"
+                                        value="5000" />
                                 </td>
                                 <td>
-                                    <input type="number" class="input-field" name="guaranteed_payments_k1_2022" value="5000" />
+                                    <input type="number" class="input-field" name="guaranteed_payments_k1_2022"
+                                        value="5000" />
                                 </td>
                             </tr>
                         </tbody>
@@ -1182,9 +1274,44 @@
 
     <!-- summary section .....  -->
     <section>
-        <h2>Summary section</h2>
-        <p id="summary-section-intro"></p>
-        <p id="summary-section-employments"></p>
+        <h2 style="margin-top: 0;">
+            Income and Employment for <span id="summary-section-intro"></span>
+        </h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>
+                        Employer
+                    </th>
+                    <th>
+                        From Date
+                    </th>
+                    <th>
+                        To Date/Present
+                    </th>
+                    <th>
+                        Position
+                    </th>
+
+                </tr>
+            </thead>
+            <tbody id="summary-section-employments">
+                <tr id="summary-section-current-employments">
+
+                    <th colspan="4" style="background-color: #fff; text-align: center;">
+                        Current Employement
+                    </th>
+
+                </tr>
+                <tr id="summary-section-previous-employments">
+                    <th colspan="4" style="background-color: #fff; text-align: center;">
+                        Previous Employement
+                    </th>
+
+                </tr>
+            </tbody>
+
+        </table>
         <p id="summary-section-duration"></p>
         <p id="summary-section-gap"></p>
         <p id="income-analysis-section"></p>
@@ -1248,6 +1375,7 @@
             borrowerName: "",
             gaps: [],
             durations: [],
+            jobStatus: [],
             employers: [],
             positions: [],
             incomeType: {
@@ -1305,14 +1433,13 @@ income.`;
             }
         }
 
-
-
-
         const summarySectionIntro = document.getElementById("summary-section-intro");
         const summarySectionEmployments = document.getElementById("summary-section-employments");
         const summarySectionDuration = document.getElementById("summary-section-duration");
         const summarySectionGaps = document.getElementById("summary-section-gap");
         const incomeAnalysisSection = document.getElementById("income-analysis-section");
+        const summarySectionCurrentEmployments = document.getElementById("summary-section-current-employments");
+        const summarySectionPreviousEmployments = document.getElementById("summary-section-previous-employments");
 
         // let e = new Set();
         let duration = 0;
@@ -1323,6 +1450,7 @@ income.`;
             borrowerName,
             employers,
             positions,
+            jobStatus,
             durations,
             gaps,
             incomeType
@@ -1471,7 +1599,6 @@ income.`;
                             const startDateInput = block.querySelector('.additionalStartDate').value;
                             const endDateInput = block.querySelector('.additionalEndDate').value;
                             const isCurrentJob = block.querySelector('.CurrenPositionCheck').checked;
-
                             const startDate = new Date(startDateInput);
                             const endDate = isCurrentJob ? new Date() : new Date(endDateInput);
 
@@ -1489,6 +1616,8 @@ income.`;
                             }
                             employers.push(employerName.value.toString());
                             positions.push(position.value.toString());
+                            jobStatus.push(isCurrentJob);
+
                         });
                     }
 
@@ -1514,35 +1643,57 @@ income.`;
                             }
                         });
 
-
+                   
                         employers.forEach((employer, i) => {
                             const jobStartDuration = moment(durations[i].startDate).format("LL");
                             const jobEndDuration = moment(durations[i].endDate).format("LL");
                             jobPosition = positions[i];
-                            summarySectionEmployments.innerText += `
-                                Employer: ${employer}
-                                ${jobStartDuration} - ${durations[i].isCurrentJob ? "Present" : jobEndDuration}
-                                Position:  ${jobPosition}
+                            let newRow = document.createElement("tr");
+                                newRow.innerHTML = `
+                                <td>${employer}</td>
+                                <td>${jobStartDuration}</td>
+                                <td>${durations[i].isCurrentJob ? "Present" : jobEndDuration}</td>
+                                <td>${jobPosition}</td>
                                 `;
+                            if (jobStatus[i]) {
+                                summarySectionCurrentEmployments.style.display = "table-row";     
+                                document.getElementById("summary-section-current-employments").insertAdjacentElement("afterend", newRow);
+
+                            } else {
+                                summarySectionPreviousEmployments.style.display = "table-row";
+                                document.getElementById("summary-section-previous-employments").insertAdjacentElement("afterend", newRow);
+                            }
+
                         });
 
 
                         gaps?.forEach((e, i) => {
-                            summarySectionEmployments.innerText += `
-                                    Unemployment Gap ${i + 1}:
-                                    ${e.startOfTheMonth} - ${e.endOfTheMonth}
+                            summarySectionEmployments.innerHTML += `
+                            <tr>
+                                  <th colspan="4" style="text-align:center">  Unemployment Gap ${i + 1}:
+                                    ${e.startOfTheMonth} - ${e.endOfTheMonth} </th>
+                                    </tr>
                                 `;
                         });
 
-                        summarySectionDuration.innerText = `Total Month(s): ${durations[durations.length - 1].totalMonths
-                            }`;
+                        summarySectionEmployments.innerHTML += `
+                        <tr> <td colspan="2">
+                        Total Month(s) </td> <td colspan="2"> ${durations[durations.length - 1].totalMonths}
+                        </td></tr>
+                        `;
 
-                        summarySectionGaps.innerText = `Total Gap: ${totalGap} month(s).`;
+                        summarySectionEmployments.innerHTML += `
+                        <tr>
+                        <td colspan="2">
+                        Total Gap: </td> <td colspan="2"> ${totalGap} month(s).
+                        <tr> </td>
+                        `;
                     }
                 } else if (id == "prev") {
+                    clearAllData();
+
                     $("#next").removeClass("disabled");
                     $("#submit").addClass("disabled");
-
                     if (child <= 2) {
                         $(this).addClass("disabled");
                     }
