@@ -97,7 +97,7 @@
     <section>
         <p class="q-text">What Is Your Main Source of Income?</p>
         <strong class="strongSubHeading">Source of Income</strong>
-        <select name="" id="SourceOfIncomeSelect" onblur="sourceOfIncome()">
+        <select name="" id="SourceOfIncomeSelect" onchange="sourceOfIncome()">
             <option value="Salary" selected>
                 Salary
             </option>
@@ -131,6 +131,7 @@
                         <input type="hidden" class="newIncome" />
                         <label for="">Multiplier</label>
                         <input type="hidden" class="newmultipier" />
+                        <input type="hidden" class="storeMonths-salary" />
                     </div>
                     <p class="filledMessage"></p>
                 </div>
@@ -173,6 +174,7 @@
                         <input type="number" class="expectedYTDHour-Field" onblur="validateHourlyInputs(this,event)" />
                         <label for="">Income</label>
                         <input type="number" class="income-Field" onblur="validateHourlyInputs(this,event)" />
+                        <input type="hidden" class="storeMonths-hourly" />
                     </div>
                     <p class="filledMessage"></p>
                 </div>
@@ -201,8 +203,8 @@
         <div id="variableSection" style="display: none">
             <div class="basePayQuestion">
                 <p>Do you have a base salary pay?</p>
-                <select name="" id="basePayQuestionSelect" onblur="basePayQuestion()">
-                    <option value="Yes">base salary pay</option>
+                <select name="" id="basePayQuestionSelect" onchange="basePayQuestion()">
+                    <option value="No">base salary pay</option>
                     <option value="Yes">Yes</option>
                     <option value="No">No</option>
                 </select>
@@ -213,7 +215,7 @@
                     <label for="">Current Rate of Pay</label>
                     <input type="number" class="currentRateOfPay" onblur="calcBasePay()" />
                     <label for="">Pay frequency</label>
-                    <select class="payFrequencyInVar" onblur="calcBasePay()">
+                    <select class="payFrequencyInVar" onchange="calcBasePay()">
                         <option value="Yearly" selected>
                             Yearly
                         </option>
@@ -357,7 +359,7 @@
         <div id="selfEmployedSection" style="display: none">
             <p class="q-text">What is your business structure?</p>
 
-            <select name="" id="businessStructureSelect" onblur="changeBusinessStructure()">
+            <select name="" id="businessStructureSelect" onchange="changeBusinessStructure()">
                 <option value="" selected>
                     Select Business Structure
                 </option>
@@ -1273,8 +1275,8 @@
     </section>
 
     <!-- summary section .....  -->
-    <section>
-        <h2 style="margin-top: 0;">
+    <section id="summaryPage">
+        <h2 id="summaryPageTop" style="margin-top: 0;">
             Income and Employment for <span id="summary-section-intro"></span>
         </h2>
         <table>
@@ -1314,6 +1316,7 @@
         </table>
         <p id="summary-section-duration"></p>
         <p id="summary-section-gap"></p>
+        <h2 style="margin: 10px 0px;">Income Analysis</h2>
         <p id="income-analysis-section"></p>
     </section>
 
@@ -1381,22 +1384,22 @@
             incomeType: {
                 salary: {
                     totalMonths: 0,
+                    income: 0,
                     ytdGrossBasePay: 0,
                     currentGrossBasePay: 0,
                     endDateOfLastPaystub: new Date(),
                 },
                 hourly: {
                     totalMonths: 0,
+                    income: 0,
                     ytdGrossBasePay: 0,
                     currentGrossBasePay: 0,
                     endDateOfLastPaystub: new Date(),
                 },
                 variable: {
-                    /**
-                     * @default default stable.
-                     * @param Statuses are stable, unstable, normalized.
-                     */
-                    status: "stable",
+                    status: "",
+                    checkBoxValue: "",
+                    monthlyVariableIncome: 0
                 },
                 selfEmployed: {}
             }
@@ -1406,33 +1409,139 @@
 
         const incomeAnalysisTypes = {
             base: (args) => {
-                return `Base pay was calculated by using the latest paystub as of [${moment(args.endDateOfLastPaystub).format("LL")}], taking the YTD income of [${args.currentGrossBasePay}] and dividing it by the number of months YTD which was [${args.totalMonths}]. This gave us a base pay of [].`;
+                return `Base pay was calculated by using the latest paystub as of <b>${moment(args.endDateOfLastPaystub).format("LL")}</b>, taking the YTD income of <b>${args.currentGrossBasePay}</b> and dividing it by the number of months YTD which was <b>${args.totalMonths}</b>. This gave us a base pay of <b>${args.income}</b>.`;
             },
 
             stable: (args) => {
-                return `Variable pay was calculated by using YTD + 2023 and 2022. This income was considered stable as the variable income was consistent and did not have more than a 10% decrease from year to year. We were also able to provide evidence for 2 + years. We took the average of YTD, 2023, and 2022. This gave us variable pay of [monthly variable income]`;
+                return `<b>${args.checkBoxValue}</b> Variable pay was calculated by using YTD + ${new Date().getFullYear() - 1} and ${new Date().getFullYear() - 2}. This income was considered <b>stable</b> as the variable income was consistent and did not have more than a 10% decrease from year to year. We were also able to provide evidence for 2 + years. We took the average of YTD, 2023, and 2022. This gave us variable pay of <b>${args.monthlyVariableIncome}</b>. <br><br>`;
             },
 
             unstable: (args) => {
-                return `Variable pay was calculated by using YTD + 2023 and 2022. This income was considered unstable
+                return `<b>${args.checkBoxValue}</b> Variable pay was calculated by using YTD + ${new Date().getFullYear() - 1} and ${new Date().getFullYear() - 2}. This income was considered <b>unstable</b>
 as the variable income was inconsistent and had more than a 10% decrease from YTD to 2023.
 We were also able to provide evidence for 2 + years. The income was calculated by taking the
 lower of YTD, 2023, and 2022. Please make sure to have your underwriter give this the green light
 as its considered underwriter discretion, remembering the 4 Cs. This gave us variable pay of
-[monthly variable income].`
+<b>${args.monthlyVariableIncome}</b>. <br><br>`
             },
-
             normalized: (args) => {
-                return `Variable pay was calculated by using YTD + 2023 and 2022. This income was considered
-normalized as the variable income was inconsistent and had more than a 10% decrease from
+                return `<b>${args.checkBoxValue}</b> Variable pay was calculated by using YTD + ${new Date().getFullYear() - 1} and ${new Date().getFullYear() - 2}. This income was considered
+<b>normalized</b> as the variable income was inconsistent and had more than a 10% decrease from
 2022 to 2023. However, YTD has recovered and is more in-line with 2022. We were also able to
 provide evidence for 2 + years. The income was calculated by taking the lower of YTD, 2023, and
 2022. Please make sure to have your underwriter give this the green light as its considered
-en discretion, remembering the 4 Cs. This gave us variable pay of [monthly variable
-income.`;
-            }
-        }
+en discretion, remembering the 4 Cs. This gave us variable pay of <b>${args.monthlyVariableIncome}</b>. <br><br>`;
+            },
+            SoleProprietorScheduleC: () => {
+                return `
+                        Self-employment income was calculated by taking the last 2 years tax returns (2023 & 2022) and using the average. Since this business files as Schedule C, the following line items were used:<br><br>
 
+                        Net Profit (or Loss) - Line 31<br>
+                        Nonrecurring Other Income - Part 1, Line 6<br>
+                        Depletion - Line 12<br>
+                        Depreciation - Line 13<br>
+                        Mileage - Part IV, Line 44a<br>
+                        Meals & Entertainment - Line 24B<br>
+                        Amortization & Casualty Loss - Line 27a (Part V)<br>
+                        Business Use of Home - Line 30
+                        `
+            },
+            CCorporation1120: () => {
+                return `
+                        Self-employment income was calculated by taking the last 2 years tax returns (2023 & 2022) and using the average. Since this business files as C Corporation, the following line items were used:<br><br>
+
+                        Form W-2<br>
+                        Wages: W-2, Box 5<br>
+                        Business Income<br>
+                        + Capital Gain Income or Loss - 1120 Line 8<br>
+                        + Net Gain or Loss (Form 4797) - 1120 Line 9<br>
+                        + Other Income or Loss - 1120 Line 10<br>
+                        + Depreciation - 1120 Line 20<br>
+                        + Depreciation - 8825 Line 14<br>
+                        + Depletion - 1120 Line 21<br>
+                        + Domestic Production Activities - 1120 Line 25<br>
+                        + Other - 1120 Line 26<br>
+                        + Net Operating Loss - 1120 Line 29a<br>
+                        + Special Deduction - 1120 Line 29B<br>
+                        + Taxable Income - 1120 Line 30<br>
+                        - Total Tax 1120 Line 31<br>
+                        - Mortgages, Notes, Bonds payable in less than 1 year - 1120 Schedule L Line 17D<br>
+                        - Travel & Entertainment 1120 Schedule M-1 Line 5C<br>
+                        - Dividend Cash 1120 Schedule M-2 Line 5a<br>
+                        - Dividend Stock 1120 Schedule M-2 Line 5B<br>
+                        - Dividend Property 1120 Schedule M-2 Line 5C
+                        `
+            },
+            SCorporation1120S: () => {
+                return `
+                        Self-employment income was calculated by taking the last 2 years tax returns (2023 & 2022) and using the average. Since this business files as S Corporation, the following line items were used:<br><br>
+
+                        Form W-2<br>
+                        Wages: W-2, Box 5<br>
+                        Business Income<br>
+                        + Capital Gain Income or Loss - 1120 Line 8<br>
+                        + Net Gain or Loss (Form 4797) - 1120 Line 9<br>
+                        + Other Income or Loss - 1120 Line 10<br>
+                        + Depreciation - 1120 Line 20<br>
+                        + Depreciation - 8825 Line 14<br>
+                        + Depletion - 1120 Line 21<br>
+                        + Domestic Production Activities - 1120 Line 25<br>
+                        + Other - 1120 Line 26<br>
+                        + Net Operating Loss - 1120 Line 29a<br>
+                        + Special Deduction - 1120 Line 29B<br>
+                        + Taxable Income - 1120 Line 30<br>
+                        - Total Tax 1120 Line 31<br>
+                        - Mortgages, Notes, Bonds payable in less than 1 year - 1120 Schedule L Line 17D<br>
+                        - Travel & Entertainment 1120 Schedule M-1 Line 5C<br>
+                        - Dividend Cash 1120 Schedule M-2 Line 5a<br>
+                        - Dividend Stock 1120 Schedule M-2 Line 5B<br>
+                        - Dividend Property 1120 Schedule M-2 Line 5C
+                        `
+            },
+            Partnership1065: () => {
+                return `
+                        Self-employment income was calculated by taking the last 2 years tax returns (2023 & 2022) and using the average. Since this business files as Partnership, the following line items were used:<br><br>
+
+                        Form W-2<br>
+                        Wages: W-2, Box 5<br>
+                        Individual Income<br>
+                        Ordinary Business Income or Loss - K1 Line 1<br>
+                        Net Rental Income or Loss - K1 Line 2<br>
+                        Other Rental Income or Loss - K1 Line 3<br>
+                        Guaranteed Payments - K-1 Line 4 or 4c on 2019+<br>
+                        Distributions - K1 Line 16D<br>
+                        Contributions<br><br>
+
+                        Business Income<br>
+                        Ordinary Income or Loss (1065 Line 4)<br>
+                        Net Farm Profit (1065 Line 5)<br>
+                        Net Gain Form 4797 (1065 Line 6)<br>
+                        Other Income or Loss (1065 Line 7)<br>
+                        Depreciation (1065 Line 16c & 8825 Line 14)<br>
+                        Depletion (1065 Line 17)<br>
+                        Amortization/Casualty Loss (1065 Line 20)<br>
+                        Mortgages, Notes, Bonds payable in less than 1 year (Sch-L Line 16d)<br>
+                        Travel & Entertainment (Sch-M1 Line 4b)<br><br>
+
+                        Months in Service<br>
+                        Percent Ownership<br><br>
+
+                        K-1 Income<br>
+                        W-2 Income<br>
+                        K-1 Lines 1, 2, 3<br>
+                        Cash Flow Adjustments<br>
+                        Guaranteed Payments<br><br>
+
+                        Distributed K-1 Income<br>
+                        W-2 Income<br>
+                        Distributions less Contributions<br>
+                        Guaranteed Payments
+                        `
+            }
+
+
+
+        }
         const summarySectionIntro = document.getElementById("summary-section-intro");
         const summarySectionEmployments = document.getElementById("summary-section-employments");
         const summarySectionDuration = document.getElementById("summary-section-duration");
@@ -1440,12 +1549,10 @@ income.`;
         const incomeAnalysisSection = document.getElementById("income-analysis-section");
         const summarySectionCurrentEmployments = document.getElementById("summary-section-current-employments");
         const summarySectionPreviousEmployments = document.getElementById("summary-section-previous-employments");
-
         // let e = new Set();
         let duration = 0;
         let totalMonths = 0;
         let totalGap = 0;
-
         let {
             borrowerName,
             employers,
@@ -1455,8 +1562,6 @@ income.`;
             gaps,
             incomeType
         } = employmentSummary;
-
-
         const calculateTotalMonths = (start, end) => {
             let startDate = moment(start);
             let endDate = moment(end);
@@ -1593,7 +1698,6 @@ income.`;
                         borrowerName = name.value.toString();
 
                         employmentBlocks.forEach((block, index) => {
-                            console.log("CALLED");
                             const employerName = block.querySelector(".additionalEmployerName");
                             const position = block.querySelector(".additionalPosition");
                             const startDateInput = block.querySelector('.additionalStartDate').value;
@@ -1618,83 +1722,134 @@ income.`;
                             positions.push(position.value.toString());
                             jobStatus.push(isCurrentJob);
 
-                        });
-                    }
 
-                    if (child === 4) {
-                        summarySectionIntro.innerText = `${borrowerName}`;
-                        console.log("Borrower ", borrowerName);
-                        console.log("Employers ", employers);
-                        console.log("Positions ", positions);
-                        console.log("Durations ", durations);
-
-                        const sourceOfIncomeType = incomeType[defaultIncomeType];
-
-                        Object.keys(incomeType).forEach((type) => {
-                            switch (type) {
-                                case "hourly":
-                                case "salary":
-                                    console.log(incomeAnalysisTypes.base(sourceOfIncomeType));
-                                    incomeAnalysisSection.innerText = incomeAnalysisTypes.base(sourceOfIncomeType);
-                                    break;
-
-                                default:
-                                    break;
-                            }
-                        });
-
-                   
-                        employers.forEach((employer, i) => {
-                            const jobStartDuration = moment(durations[i].startDate).format("LL");
-                            const jobEndDuration = moment(durations[i].endDate).format("LL");
-                            jobPosition = positions[i];
-                            let newRow = document.createElement("tr");
+                            // Show Data in summary section here 
+                            summarySectionIntro.innerText = `${borrowerName}`;
+                            employers.forEach((employer, i) => {
+                                const jobStartDuration = moment(durations[i].startDate).format("LL");
+                                const jobEndDuration = moment(durations[i].endDate).format("LL");
+                                jobPosition = positions[i];
+                                let newRow = document.createElement("tr");
                                 newRow.innerHTML = `
                                 <td>${employer}</td>
                                 <td>${jobStartDuration}</td>
                                 <td>${durations[i].isCurrentJob ? "Present" : jobEndDuration}</td>
                                 <td>${jobPosition}</td>
                                 `;
-                            if (jobStatus[i]) {
-                                summarySectionCurrentEmployments.style.display = "table-row";     
-                                document.getElementById("summary-section-current-employments").insertAdjacentElement("afterend", newRow);
+                                if (jobStatus[i]) {
+                                    summarySectionCurrentEmployments.style.display = "table-row";
+                                    document.getElementById("summary-section-current-employments").insertAdjacentElement("afterend", newRow);
 
-                            } else {
-                                summarySectionPreviousEmployments.style.display = "table-row";
-                                document.getElementById("summary-section-previous-employments").insertAdjacentElement("afterend", newRow);
-                            }
+                                } else {
+                                    summarySectionPreviousEmployments.style.display = "table-row";
+                                    document.getElementById("summary-section-previous-employments").insertAdjacentElement("afterend", newRow);
+                                }
 
-                        });
-
-
-                        gaps?.forEach((e, i) => {
-                            summarySectionEmployments.innerHTML += `
+                            });
+                            gaps?.forEach((e, i) => {
+                                summarySectionEmployments.innerHTML += `
                             <tr>
                                   <th colspan="4" style="text-align:center">  Unemployment Gap ${i + 1}:
                                     ${e.startOfTheMonth} - ${e.endOfTheMonth} </th>
                                     </tr>
                                 `;
-                        });
-
-                        summarySectionEmployments.innerHTML += `
+                            });
+                            summarySectionEmployments.innerHTML += `
                         <tr> <td colspan="2">
                         Total Month(s) </td> <td colspan="2"> ${durations[durations.length - 1].totalMonths}
                         </td></tr>
                         `;
-
-                        summarySectionEmployments.innerHTML += `
+                            summarySectionEmployments.innerHTML += `
                         <tr>
                         <td colspan="2">
                         Total Gap: </td> <td colspan="2"> ${totalGap} month(s).
                         <tr> </td>
                         `;
+
+                        });
                     }
+
+                    if (child === 4) {
+                        incomeAnalysisSection.innerHTML = '';
+                        if (defaultIncomeType === "salary") {
+                            const block = document.querySelectorAll('.SalaryBlocks');
+                            const lastBlock = block[block.length - 1];
+
+                            const endDateInput = lastBlock.querySelector('.SalaryEndDate').value;
+                            const GrossPay = lastBlock.querySelector('.currentGrossPay').value;
+                            const YTDGross = lastBlock.querySelector('.YTDGrossPays').value;
+                            const storeMonths = lastBlock.querySelector('.storeMonths-salary').value;
+                            const income = lastBlock.querySelector('.newIncome').value;
+                            employmentSummary.incomeType.salary.endDateOfLastPaystub = new Date(endDateInput);;
+                            employmentSummary.incomeType.salary.currentGrossBasePay = GrossPay;
+                            employmentSummary.incomeType.salary.ytdGrossBasePay = YTDGross;
+                            employmentSummary.incomeType.salary.totalMonths = storeMonths;
+                            employmentSummary.incomeType.salary.income = income;
+                            const sourceOfIncomeType = incomeType[defaultIncomeType];
+                            incomeAnalysisSection.innerHTML = incomeAnalysisTypes.base(sourceOfIncomeType);
+                        }
+                        else if (defaultIncomeType === "hourly") {
+                            const blockHourly = document.querySelectorAll('.hourlyBlocks');
+                            const lastHourlyBlock = blockHourly[blockHourly.length - 1];
+
+                            const hourlyEndDate = lastHourlyBlock.querySelector('.hourlyEndDate').value;
+                            const currentGrossBasePayHourly = lastHourlyBlock.querySelector('.currentGrossBasePay-hourly').value;
+                            const ytdGrossBasePayHourly = lastHourlyBlock.querySelector('.ytdGrossBasePay-hourly').value;
+                            const MonthsHourly = lastHourlyBlock.querySelector('.storeMonths-hourly').value;
+                            const incomeHourly = lastHourlyBlock.querySelector('.income-Field').value;
+
+                            employmentSummary.incomeType.hourly.endDateOfLastPaystub = new Date(hourlyEndDate);
+                            employmentSummary.incomeType.hourly.ytdGrossBasePay = ytdGrossBasePayHourly;
+                            employmentSummary.incomeType.hourly.currentGrossBasePay = currentGrossBasePayHourly;
+                            employmentSummary.incomeType.hourly.totalMonths = MonthsHourly;
+                            employmentSummary.incomeType.hourly.income = incomeHourly;
+
+                            const sourceOfIncomeType = incomeType[defaultIncomeType];
+                            incomeAnalysisSection.innerHTML = incomeAnalysisTypes.base(sourceOfIncomeType);
+
+                        }
+                        else if (defaultIncomeType === "variable") {
+                            let basePayQuestionSelect = document.querySelector("#basePayQuestionSelect").value;
+                            if (basePayQuestionSelect === "Yes") {
+                                const basePaySalary = document.getElementById("basePaySalary");
+                                let rateOfPay = basePaySalary.querySelector(".currentRateOfPay").value;
+                                let payFrequency = basePaySalary.querySelector(".payFrequencyInVar").value;
+                                incomeAnalysisSection.innerHTML = `<b>Base pay</b> income was calculated by taking the rate of pay of <b> ${rateOfPay} </b>with a frequency of <b> ${payFrequency}</b>. This equates to a monthly income of <b>${monthlyEarning.value}</b> by taking <b>${formulaOfMonthlyEarning}</b> <br><br>`;
+
+                            }
+                            document.querySelectorAll('input[name="compensation"]:checked').forEach(checkbox => {
+                                const checkboxValue = checkbox.value;
+                                const uniqueClass = `BasePayEarningBlock-${checkboxValue.replace(/\s+/g, '-')}`;
+                                const parentBlocks = document.querySelectorAll(`.${uniqueClass}`);
+                                let qualiyingPayingInVar = parentBlocks[2].querySelector('#qualifyingPay').value;
+                                const status = parentBlocks[2].querySelector('.statusValue').value.toLowerCase();
+                                employmentSummary.incomeType.variable.checkBoxValue = checkboxValue;
+                                employmentSummary.incomeType.variable.monthlyVariableIncome = qualiyingPayingInVar;
+                                const sourceOfIncomeType = incomeType[defaultIncomeType];
+                                incomeAnalysisSection.innerHTML += incomeAnalysisTypes[status](sourceOfIncomeType);
+                                if (checkboxValue === "Bonus" || checkboxValue === "Commission") {
+                                    const paidOut = parentBlocks[0].querySelector('.howOften').value;
+                                    incomeAnalysisSection.innerHTML += `
+                                    Please note <b>${checkboxValue}</b> income is paid out <b>${paidOut}</b> and the YTD months has been factored into the calculation. <br> <br>
+                                    `;
+                                }
+                            });
+                        }
+                        else if (defaultIncomeType === "self") {
+                            let businessStructureInput = document.getElementById('businessStructureSelect').value;
+                            businessStructureInput = businessStructureInput.replace(/ /g, '').replace(/-/g, '');
+                            incomeAnalysisSection.innerHTML = incomeAnalysisTypes[businessStructureInput]();
+                        }
+
+                    }
+
                 } else if (id == "prev") {
-                    clearAllData();
 
                     $("#next").removeClass("disabled");
                     $("#submit").addClass("disabled");
+
                     if (child <= 2) {
+                        console.log("1");
                         $(this).addClass("disabled");
                     }
                     if (child > 1) {
