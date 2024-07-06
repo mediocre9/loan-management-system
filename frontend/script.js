@@ -11,121 +11,17 @@ var currentEmployementExists = false;
 
 let defaultIncomeType = "salary"; //default  . . . .
 
-// const employmentSummary = {
-//     borrowerName: "",
-//     gaps: new Set(),
-//     durations: new Set(),
-//     employers: [],
-//     positions: [],
-//     incomeType: {
-//         salary: {
-//             totalMonths: 0,
-//             ytdGrossBasePay: 0,
-//             currentGrossBasePay: 0,
-//             endDateOfLastPaystub: new Date(),
-//         },
-//         hourly: {
-//             totalMonths: 0,
-//             ytdGrossBasePay: 0,
-//             currentGrossBasePay: 0,
-//             endDateOfLastPaystub: new Date(),
-//         },
-//         variable: {
-//             /**
-//              * @default default stable.
-//              * @param Statuses are stable, unstable, normalized.
-//              */
-//             status: "stable",
-//         },
-//         selfEmployed: {}
-//     }
-// }
 
-
-// const incomeAnalysisTypes = {
-//     base: (args) => {
-//         return `Base pay was calculated by using the latest paystub as of [${moment(args.endDateOfLastPaystub).format("LL")}], taking the YTD income of [${args.currentGrossBasePay}] and dividing it by the number of months YTD which was [${args.totalMonths}]. This gave us a base pay of [].`;
-//     },
-
-//     stable: (args) => {
-//         return `Variable pay was calculated by using YTD + 2023 and 2022. This income was considered stable as the variable income was consistent and did not have more than a 10% decrease from year to year. We were also able to provide evidence for 2 + years. We took the average of YTD, 2023, and 2022. This gave us variable pay of [monthly variable income]`;
-//     },
-
-//     unstable: (args) => {
-//         return `Variable pay was calculated by using YTD + 2023 and 2022. This income was considered unstable
-// as the variable income was inconsistent and had more than a 10% decrease from YTD to 2023.
-// We were also able to provide evidence for 2 + years. The income was calculated by taking the
-// lower of YTD, 2023, and 2022. Please make sure to have your underwriter give this the green light
-// as its considered underwriter discretion, remembering the 4 Cs. This gave us variable pay of
-// [monthly variable income].`
-//     },
-
-//     normalized: (args) => {
-//         return `Variable pay was calculated by using YTD + 2023 and 2022. This income was considered
-// normalized as the variable income was inconsistent and had more than a 10% decrease from
-// 2022 to 2023. However, YTD has recovered and is more in-line with 2022. We were also able to
-// provide evidence for 2 + years. The income was calculated by taking the lower of YTD, 2023, and
-// 2022. Please make sure to have your underwriter give this the green light as its considered
-// en discretion, remembering the 4 Cs. This gave us variable pay of [monthly variable
-// income.`;
-//     }
-// }
-
-/**
- * @description Added an unemployment gap 
- * feature. Making changes to uncommitted code 
- * might be risky.
- * 
- * @todo Remove dead commented code  . . .
- * 
- * Utilized moment.js [difference] function
- * to calculate the gap and duration . . 
- * 
- * https://momentjs.com/docs/#/displaying/difference/
- */
 function checkEmploymentHistory() {
     let totalEmploymentMonths = 0;
     currentEmploymentDates = [];
 
     let duration = 0;
-    // let gap = 0;
-    // let totalGap = 0
-    // let s = new Set(); // new Set()
-    // let e = new Set();
-
-    // Function to calculate months between two dates
-    function calculateMonths(start, end, { withGap = false } = {}) {
+    function calculateMonths(start, end) {
         let startDate = moment(start);
         let endDate = moment(end);
-
-        // s.add(start);
-        // e.add(end);
-
         duration = Math.round(endDate.diff(startDate, "months", true));
         return duration;
-
-        // if (withGap) {
-        //     let startDate = [...s];
-        //     let endDate = [...e];
-        //     gap = Math.abs(Math.round(moment(endDate[endDate.length - 2]).diff(moment(startDate[startDate.length - 1]), "months")));
-
-
-        //     if (gap > 0) {
-        //         const a = startDate[startDate.length - 1];
-        //         const b = endDate[endDate.length - 2];
-        //         const startOfTheMonth = moment(b).add(1, 'day').format("l");
-        //         const endOfTheMonth = moment(a).subtract(1, 'day').format("l");
-
-        //         // employmentSummary.gaps.add(JSON.stringify({ gap, startOfTheMonth, endOfTheMonth }));
-        //         // console.log("GAP VALUES", moment(a).subtract(1, 'day').format("l"), moment(b).add(1, 'day').format("l"));
-        //     }
-        // }
-
-        // return { duration, gap };
-
-
-        // const diffInMilliseconds = endDate - startDate;
-        // return diffInMilliseconds / (1000 * 60 * 60 * 24 * 30.44); // Average number of days in a month
     }
 
     // Function to create additional employment block
@@ -181,29 +77,9 @@ function checkEmploymentHistory() {
                 const endDate = isCurrentJob ? currentDate : new Date(endDateInput);
                 const duration = calculateMonths(startDate, endDate);
                 totalMonths += duration;
-
-                // employmentSummary.durations.add(JSON.stringify({ totalMonths, startDate, endDate }));
-                // console.log("Total Months", totalMonths);
-
                 if (isCurrentJob) {
                     currentEmploymentDates.push({ startDate, endDate });
                 }
-
-                // if (index >= 1) {
-                // calculateMonths(startDate, endDate, { withGap: true });
-                // totalGap += gap;
-                // console.log("Gap", totalGap);
-
-                // if (totalGap > 0) {
-                //     const a = startDate[startDate.length - 1];
-                //     const b = endDate[endDate.length - 2];
-                //     const startOfTheMonth = moment(b).add(1, 'day').format("ll");
-                //     const endOfTheMonth = moment(a).subtract(1, 'day').format("ll");
-                //     employmentSummary.gaps.add(JSON.stringify({ totalGap, startOfTheMonth, endOfTheMonth }));
-                //     console.log("GAP VALUES", moment(a).subtract(1, 'day').format("ll"), moment(b).add(1, 'day').format("ll"));
-                // }
-
-                // }
             }
         });
 
@@ -225,17 +101,6 @@ function checkEmploymentHistory() {
 }
 
 
-/**
- * @note This code is highly problemtic
- * because sometimes it does not work
- * and gets difficult to further add new
- * features....Addding feature such as the summary
- * causes it to break something and returns empty values.....
- * 
- * I have been trying to add feature and fix the issue
- * but still no luck that where does the problem lies. . .
- * we must have to fix and refactor all this file . . . 
- */
 function ValidateInputs(Input, event) {
     let flag = true;
     document.querySelectorAll('.additionalEmploymentBlock').forEach(block => {
@@ -265,23 +130,12 @@ function ValidateInputs(Input, event) {
     });
 
     if (flag) {
-        /**
-         * @note This function was not working as expected
-         * and after some debugging i have removed some code
-         * which were not being executed because the values
-         * were not being collected, currently the code works
-         * fine but still i dont know what i might have break 
-         * @jamal Further investigation is required to validate 
-         * this process and code according to requirements, otherwise 
-         * remove the below unecessary commented code .. . . 
-         */
         const ParentWraper = document.getElementById('additionalEmploymentContainer');
         const children = ParentWraper.children;
         const parentBox = event.target.parentElement;
         const currentIndex = Array.from(parentBox.parentNode.children).indexOf(parentBox);
         // checkEmploymentHistory();
         const NumberOfMonth = checkEmploymentHistory();
-        console.log("Curent index", currentIndex, "Children", children.length);
         if (NumberOfMonth > 24) {
             // if (children.length > currentIndex + 1) {
             // for (let i = currentIndex + 1; i < children.length; i++) {
@@ -432,8 +286,8 @@ let selectedMultiplier = 26;
 let selectedFrequency = 'bi-weekly';
 var allSalleryFilled = true;
 var allHourlyFilled = true;
-var newIncome = '';
-var newmultipier = '';
+var newIncome ;
+var newmultipier ;
 var consoleData = '';
 let allMonths = [];
 let firstMultiplier = [];
@@ -482,6 +336,7 @@ function createAdditionalSalleryBlock() {
         <input type="hidden" class="newIncome">
         <label for="">Multiplier</label>
         <input type="hidden" class="newmultipier">
+            <input type="hidden"  class="storeMonths-salary" />
     </div>
         <p class="filledMessage"></p>
    
@@ -609,9 +464,7 @@ function validateSalaryInputs(Input, event) {
         const endDateInput = block.querySelector('.SalaryEndDate').value;
         const GrossPay = block.querySelector('.currentGrossPay').value;
         const YTDGross = block.querySelector('.YTDGrossPays').value;
-
-
-
+        const storeMonths = block.querySelector('.storeMonths-salary');
         newIncome = block.querySelector('.newIncome');
         newmultipier = block.querySelector('.newmultipier');
         consoleData = block.querySelector('.consoleData');
@@ -629,11 +482,6 @@ function validateSalaryInputs(Input, event) {
          * add paranthesis or it might cause undefine behaviour . . .
          */
         const currentDate = new Date;
-
-
-        employmentSummary.incomeType.salary.endDateOfLastPaystub = endDate;
-        employmentSummary.incomeType.salary.currentGrossBasePay = GrossPay;
-        employmentSummary.incomeType.salary.ytdGrossBasePay = YTDGross;
 
         if (startDate > currentDate) { // Check if start date is greater than current date
             allSalleryFilled = false;
@@ -664,10 +512,6 @@ function validateSalaryInputs(Input, event) {
             let truncDays = Math.trunc(days);
             let multiplier = 0;
             allMonths.push(convertToDate.getMonth());
-
-
-
-            console.log(allMonths);
             const allFeb = allMonths[0] === 1 ? true : false;
             const isFebruary = convertToDate.getMonth() === 1;
             const firstDayOfFebruary = new Date(convertToDate.getFullYear(), 1, 1);
@@ -704,10 +548,20 @@ function validateSalaryInputs(Input, event) {
                 validateIncome = GrossPay ? (GrossPay * firstMultiplier[0]) / 12 : 0;
             }
             let monthsYTD = CalcMonthsYTD(EndDateOfHourly);
-
-            employmentSummary.incomeType.salary.totalMonths = monthsYTD;
+    
+            if((monthsYTD * validateIncome) !== parseInt(YTDGross)){
+                allSalleryFilled = false;
+                filledMessage.style.display = "block";
+                filledMessage.innerText = "Months * Income Is not equal to Gross Pay";
+                return;
+            }else{
+                allSalleryFilled = true;
+                filledMessage.style.display = "none";
+                filledMessage.innerText = "";
+            }
 
             consoleData.style.display = "block";
+            storeMonths.value = monthsYTD;
             newIncome.value = validateIncome;
             newIncome.type = 'text';
             newIncome.disabled = true;
@@ -782,6 +636,7 @@ function createAdditionalHourlyBlock() {
                 <label for="">Income</label>
                 <input type="number" placeholder="1380" class="income-Field"
                     onblur="validateHourlyInputs(this,event)" />
+                    <input type="hidden"  class="storeMonths-hourly" />
                     
             </div>
     <p class="filledMessage"></p>
@@ -855,17 +710,13 @@ function validateHourlyInputs(input, event) {
         const currentGrossBasePayHourly = block.querySelector('.currentGrossBasePay-hourly').value;
         const ytdHourHourly = block.querySelector('.YTDhour-hourly').value;
         const ytdGrossBasePayHourly = block.querySelector('.ytdGrossBasePay-hourly').value;
+        const storeMonths = block.querySelector('.storeMonths-hourly');
         checkHourlyRateField = block.querySelector('.checkHourlyRate-Field');
         paychecksYTDField = block.querySelector('.paychecksYTD-Field');
         expectedYTDHourField = block.querySelector('.expectedYTDHour-Field');
         incomeField = block.querySelector('.income-Field');
         filledMessage = block.querySelector('.filledMessage');
         hourlyConsole = block.querySelector('.hourlyConsole');
-
-
-        employmentSummary.incomeType.hourly.endDateOfLastPaystub = new Date(hourlyEndDate);
-        employmentSummary.incomeType.hourly.currentGrossBasePay = currentGrossBasePayHourly;
-        employmentSummary.incomeType.hourly.ytdGrossBasePay = ytdGrossBasePayHourly;
 
 
         if (!hourlyStartDate || !hourlyEndDate || !hourlyRate || !currentHourBasePay || !currentGrossBasePayHourly || !ytdHourHourly || !ytdGrossBasePayHourly) {
@@ -964,11 +815,8 @@ function validateHourlyInputs(input, event) {
                 allHourlyFilled = true;
             }
             const monthsYTD = CalcMonthsYTD(convertToDate); // no of months
+            storeMonths.value = monthsYTD;
             const income = hourlyRate * 2080 / 12;
-
-            employmentSummary.incomeType.hourly.totalMonths = monthsYTD;
-            employmentSummary.incomeType.hourly.currentGrossBasePay = income;
-
             checkHourlyRateField.value = checkHourlyRate;
             checkHourlyRateField.disabled = true;
             paychecksYTDField.value = paychecksYTD;
@@ -978,12 +826,7 @@ function validateHourlyInputs(input, event) {
             incomeField.value = income;
             incomeField.disabled = true;
             hourlyConsole.style.display = 'block';
-
-
-
         }
-
-
     });
     if (allHourlyFilled) {
 
@@ -1146,8 +989,8 @@ function validateHourlyAndContinue() {
             createAdditionalHourlyBlock();
         }
     }
-
 }
+
 function calculatePaychecksYTD(payFrequency, lastPaystubStartDate, lastPaystubEndDate) {
     const startDate = new Date(lastPaystubStartDate);
     const endDate = new Date(lastPaystubEndDate);
@@ -1234,42 +1077,7 @@ function renderResults(weeksByYear) {
         yearCollectionDiv.appendChild(yearDiv);
     });
 }
-function renderYTDandTwoYear(weeksByYear) {
 
-    const yearCollectionDiv = document.querySelector('.Ytdand2year');
-    const currentYear = new Date().getFullYear();
-    const sortedYears = Object.keys(weeksByYear).sort((a, b) => b - a);
-
-    sortedYears.forEach(year => {
-        const yearData = weeksByYear[year];
-        const hoursValue = yearData.hours;
-        const months = yearData.months;
-
-        const yearLabel = year == currentYear ? "YTD" : year;
-
-        const yearHTML = `
-<strong class="strongSubHeading" style="margin-bottom: 10px;">${yearLabel}</strong>
-<label for="">From</label>
-<input type = "date" class="startDateInVar" value="${formatDate(new Date(yearData.from))}" disabled />
-<label for="">To</label>
-<input type = "date" class = "endDateInVar" value="${formatDate(new Date(yearData.to))}" ${year == currentYear ? 'onblur="updateMonths(event,\'.yearEarningBlock\')"' : 'disabled'} />
-<label for=""  >Total Earnings</label>
-<input type="number" onblur='calculateTotalEarning(event,".yearEarningBlock")'  class="totalEarningsInVar" />
-<label for="">No Of Months</label>
-<input type="number" class="noOfMonths" value="${months}"" disabled />
-<label for="" >Monthly Earnings</label>
-<input type="number" class = "MonEarning"  disabled />
-<label for="">% Change</label>
-<input type="number" class="changeInEarning"  disabled />
-
-`;
-
-        const yearDiv = document.createElement('div');
-        yearDiv.className = 'yearEarningBlock';
-        yearDiv.innerHTML = yearHTML;
-        yearCollectionDiv.appendChild(yearDiv);
-    });
-}
 
 function calculateAverageHour(event) {
     // Get the closest ancestor element with the class .hourlyBlocks
@@ -1320,6 +1128,7 @@ let payFrequencyInVar = document.querySelector('.payFrequencyInVar');
 let monthlyEarning = document.querySelector('.monthlyEarning');
 let yearlyEarning = document.querySelector('.yearlyEarning');
 let clacResults = document.querySelector('.clacResults');
+let formulaOfMonthlyEarning; 
 
 function calcBasePay() {
     if (currentRateOfPay.value && payFrequencyInVar.value) {
@@ -1350,6 +1159,7 @@ function calcBasePay() {
 
         const yearMoney = periodsPerYear * currentRateOfPay.value;
         const monthMoney = yearMoney / 12;
+        formulaOfMonthlyEarning = ` ${periodsPerYear} * ${currentRateOfPay.value} / 12`;
         yearlyEarning.value = yearMoney;
         monthlyEarning.value = monthMoney;
         clacResults.style.display = "block";
@@ -1378,7 +1188,48 @@ function basePayQuestion() {
 function salleryToBasePay() {
     wrpperBasePay.style.display = "block";
 }
+function renderYTDandTwoYear(weeksByYear) {
 
+    const yearCollectionDiv = document.querySelector('.Ytdand2year');
+    const currentYear = new Date().getFullYear();
+    const sortedYears = Object.keys(weeksByYear).sort((a, b) => b - a);
+
+    sortedYears.forEach(year => {
+        const yearData = weeksByYear[year];
+        const hoursValue = yearData.hours;
+        const months = yearData.months;
+
+        const yearLabel = year == currentYear ? "YTD" : year;
+
+        const yearHTML = `
+<strong class="strongSubHeading" style="margin-bottom: 10px;">${yearLabel}</strong>
+<label for="">From</label>
+<input type = "date" class="startDateInVar" value="${formatDate(new Date(yearData.from))}" disabled />
+<label for="">To</label>
+<input type = "date" class = "endDateInVar" value="${formatDate(new Date(yearData.to))}" ${year == currentYear ? 'onblur="updateMonths(event,\'.yearEarningBlock\')"' : 'disabled'} />
+<label for=""  >Total Earnings</label>
+<input type="number" onblur='calculateTotalEarning(event,".yearEarningBlock")'  class="totalEarningsInVar" />
+<label for="">No Of Months</label>
+<input type="number" class="noOfMonths" value="${months}"" disabled />
+<label for="" >Monthly Earnings</label>
+<input type="number" class = "MonEarning"  disabled />
+<label for="">% Change</label>
+<input type="number" class="changeInEarning"  disabled />
+
+`;
+
+        const yearDiv = document.createElement('div');
+        yearDiv.className = 'yearEarningBlock';
+        yearDiv.innerHTML = yearHTML;
+        yearCollectionDiv.appendChild(yearDiv);
+    });
+}
+
+
+/**
+ * Why do we have two functions when their 
+ * functionality, their purpose is same?
+ */
 function calculateMonths(startDate, endDate) {
     const startYear = startDate.getFullYear();
     const endYear = endDate.getFullYear();
@@ -1700,6 +1551,7 @@ function checkChangeStatus(changes, blockClass, earning, months, monthlyEarning)
     const html = `
 <label for="qualifyingPay">Qualifying Variable Pay</label>
 <input type="number" id="qualifyingPay" disabled value="${qualifyingPay}" />
+<input type="hidden" class="statusValue" disabled value="${status}" />
 `;
 
     // Append the HTML to the third block (blocks[2]) if it exists, else update its value
