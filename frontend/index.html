@@ -46,7 +46,7 @@
 
 <body>
     <div id="svg_wrap"></div>
-    <h1>Logic Links</h1>
+    <h1 id="logicLinks">Logic Links</h1>
     <section>
         <p class="q-text">Please enter employment history. Must put at least 2 years.</p>
         <div id="additionalEmploymentContainer">
@@ -1363,9 +1363,10 @@
         <div class="button" id="next">
             Next &rarr;
         </div>
-        <div class="button" id="submit">
-            Agree and send application
+        <div class="button downloadAsPDF" id="downloadAsPDF" style="display: none;">
+            Download as PDF 
         </div>
+        
     </div>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -1722,9 +1723,10 @@ en discretion, remembering the 4 Cs. This gave us variable pay of <b>${args.mont
                             positions.push(position.value.toString());
                             jobStatus.push(isCurrentJob);
 
+                        });
 
-                            // Show Data in summary section here 
-                            summarySectionIntro.innerText = `${borrowerName}`;
+                                 // Show Data in summary section here 
+                                 summarySectionIntro.innerText = `${borrowerName}`;
                             employers.forEach((employer, i) => {
                                 const jobStartDuration = moment(durations[i].startDate).format("LL");
                                 const jobEndDuration = moment(durations[i].endDate).format("LL");
@@ -1765,8 +1767,6 @@ en discretion, remembering the 4 Cs. This gave us variable pay of <b>${args.mont
                         Total Gap: </td> <td colspan="2"> ${totalGap} month(s).
                         <tr> </td>
                         `;
-
-                        });
                     }
 
                     if (child === 4) {
@@ -1841,6 +1841,13 @@ en discretion, remembering the 4 Cs. This gave us variable pay of <b>${args.mont
                             incomeAnalysisSection.innerHTML = incomeAnalysisTypes[businessStructureInput]();
                         }
 
+                        let logicLinks = document.getElementById('logicLinks');
+                        logicLinks.scrollIntoView({
+                            behavior:"smooth",
+                            block:"start"
+                        });
+                        let downloadAsPDF = document.getElementById("downloadAsPDF");
+                        downloadAsPDF.style.display = "inline-block";
                     }
 
                 } else if (id == "prev") {
