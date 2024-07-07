@@ -1736,16 +1736,18 @@ en discretion, remembering the 4 Cs. This gave us variable pay of <b>${args.mont
                         });
 
                         // Show Data in summary section here
-                        document.querySelectorAll(".customRows-empHistory").forEach(rows =>{
+                        document.querySelectorAll(".customRows-empHistory").forEach(rows => {
                             rows.innerHTML = '';
+
                         });
+                        console.log(document.querySelectorAll(".customRows-empHistory").length);
                         summarySectionIntro.innerText = `${borrowerName}`;
                         employers.forEach((employer, i) => {
                             const jobStartDuration = moment(durations[i].startDate).format("LL");
                             const jobEndDuration = moment(durations[i].endDate).format("LL");
                             jobPosition = positions[i];
                             let newRow = document.createElement("tr");
-                            newRow.className ="customRows-empHistory";
+                            newRow.className = "customRows-empHistory";
                             newRow.innerHTML = `
             <td>${employer}</td>
             <td>${jobStartDuration}</td>
@@ -1760,10 +1762,12 @@ en discretion, remembering the 4 Cs. This gave us variable pay of <b>${args.mont
                                 document.getElementById("summary-section-previous-employments").insertAdjacentElement("afterend", newRow);
                             }
                         });
-
+                        document.querySelectorAll(".empGaps").forEach(empGaps => {
+                            empGaps.remove();
+                        })
                         gaps?.forEach((e, i) => {
                             summarySectionEmployments.innerHTML += `
-        <tr>
+        <tr class="unEmpGap empGaps">
               <th colspan="4" style="text-align:center">  Unemployment Gap ${i + 1}:
                 ${e.startOfTheMonth} - ${e.endOfTheMonth} </th>
                 </tr>
@@ -1771,13 +1775,13 @@ en discretion, remembering the 4 Cs. This gave us variable pay of <b>${args.mont
                         });
 
                         summarySectionEmployments.innerHTML += `
-    <tr> <td colspan="2">
+    <tr class="empTotalMonths empGaps"> <td colspan="2">
     Total Month(s) </td> <td colspan="2"> ${durations[durations.length - 1].totalMonths}
     </td></tr>
     `;
 
                         summarySectionEmployments.innerHTML += `
-    <tr>
+    <tr class="empTotalGap empGaps">
     <td colspan="2">
     Total Gap: </td> <td colspan="2"> ${totalGap} month(s).
     <tr> </td>
@@ -1874,7 +1878,7 @@ en discretion, remembering the 4 Cs. This gave us variable pay of <b>${args.mont
                     $("#submit").addClass("disabled");
 
                     if (child <= 2) {
-                        console.log("1");
+                        clearAllData()
                         $(this).addClass("disabled");
                     }
                     if (child > 1) {
@@ -1904,10 +1908,6 @@ en discretion, remembering the 4 Cs. This gave us variable pay of <b>${args.mont
             durations = [];
             s.clear();
 
-            summarySectionIntro.innerText = "";
-            summarySectionDuration.innerText = "";
-            summarySectionEmployments.innerText = "";
-            summarySectionGaps.innerText = "";
         }
         function downloadAsPDF() {
             const element = document.getElementById('summaryPage');
