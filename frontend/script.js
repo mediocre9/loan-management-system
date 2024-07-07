@@ -552,7 +552,7 @@ function validateSalaryInputs(Input, event) {
             if((monthsYTD * validateIncome) !== parseInt(YTDGross)){
                 allSalleryFilled = false;
                 filledMessage.style.display = "block";
-                filledMessage.innerText = "Months * Income Is not equal to Gross Pay";
+                filledMessage.innerText = `Months(${monthsYTD}) * Income(${validateIncome}) Is not equal to Gross Pay(${parseInt(YTDGross)})`;
                 return;
             }else{
                 allSalleryFilled = true;
