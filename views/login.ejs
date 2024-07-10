@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+</head>
+
+<body>
+    <h2>Login Account</h2>
+    <form action="/login" method="post">
+        <input type="email" name="email" placeholder="Email" class="form-data" value="<%= locals.error?.formData?.email %>">
+        <input type="password" name="password" placeholder="Password" class="form-data" value="<%= locals.error?.formData?.password %>">
+
+        <% if (locals.error) { %>
+        <p><%= locals.error.message %></p>
+        <% } %>
+        <input type="submit" value="Login" class="login-btn">
+    </form>
+    <a href="/register">Register Account</a>
+    <a href="/reset-password">Forgot Password</a>
+</body>
+
+</html>

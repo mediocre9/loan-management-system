@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <h2>Register Account</h2>
+    <form action="" method="post">
+        <input type="text" name="firstName" placeholder="First Name" value="<%= locals.error?.formData?.firstName %>">
+        <input type="text" name="lastName" placeholder="Last Name" value="<%= locals.error?.formData?.lastName %>">
+        <input type="email" name="email" placeholder="Email" value="<%= locals.error?.formData?.email %>">
+        <input type="password" name="password" placeholder="Password" value="<%= locals.error?.formData?.password %>">
+        <input type="submit" value="Create Account" class="submit-btn">
+    </form>
+
+    <% if (locals.error) { %>
+    <span><%= locals.error.message %></span>
+    <% } %>
+
+    <% if (locals.message) { %>
+    <span><%= locals.message %></span>
+    <% } %>
+    <a href="/login">Already Registered? Sign in here</a>
+</body>
+
+
+</html>
