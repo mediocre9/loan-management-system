@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verification</title>
+</head>
+
+<body>
+    <!-- masked email will be sent also to email -->
+    <% if (locals.error) { %>
+    <p><%= locals.error.message %></p>
+    <% } else { %>
+    <h2>Verify your email address</h2>
+    <p>We have sent a verfication link to <strong><%= locals.email %></strong></p>
+    <p>Click on the link to complete the verification process. </p>
+    <p>You might need to <strong> check your spam folder. </strong></p>
+    <% } %>
+</body>
+
+</html>
