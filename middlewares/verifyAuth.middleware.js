@@ -1,38 +1,38 @@
 import "dotenv/config";
 import JWT from "jsonwebtoken";
-import { ApiError } from "../utils/apiError.js";
+import { AuthError } from "../utils/authError.js";
 import { decodeToken } from "../utils/utils.js";
 
 const JWT_SECRET = process.env.JWT_SECRET ?? "secret";
 
-export const verifyAuth = ({ tokenType = 'access' } = {}) => {
+export const verifyAuth = ({ tokenType = '_aid' } = {}) => {
 
     return (request, response, next) => {
         try {
+            // if (tokenType !== '_aid' && tokenType !== '_rid') {
+            //     throw new AuthError(`Invalid input token type (${tokenType})! The token type can either be \'access\' or \'refresh\'.`);
+            // }
 
-            if (tokenType !== 'access' && tokenType !== 'refresh') {
-                throw new ApiError(`Invalid input token type (${tokenType})! The token type can either be \'access\' or \'refresh\'.`);
-            }
-
-            const token = request.header("Authorization");
+            const token = request.cookies["_aid"];
 
             if (!token) {
-                throw new ApiError("Authorization Header or token is missing!", 401)
+                throw new AuthError("Authorization Header or token is missing!", 401)
             }
 
-            const { jwtType } = decodeToken(token);
+            // const { jwtType } = decodeToken(token);
 
-            if (tokenType !== jwtType) {
-                throw new ApiError(`Invalid Token type! Only ${tokenType} token is allowed!`);
-            }
+            // if (tokenType !== jwtType) {
+            //     throw new AuthError(`Invalid Token type! Only ${tokenType} token is allowed!`);
+            // }
 
             JWT.verify(token, JWT_SECRET, (err) => {
                 if (err) {
-                    throw new ApiError("Invalid or expired token!", 401);
+                    throw new AuthError("Invalid or expired token!", 401);
                 }
             });
 
             request.token = token;
+            request.decoded = decodeToken(token);
             return next();
         } catch (error) {
             next(error);
