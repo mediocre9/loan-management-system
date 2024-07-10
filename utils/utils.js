@@ -1,30 +1,21 @@
 import JWT from "jsonwebtoken";
-import otp from "otp-generator";
+import { createHmac } from "crypto";
 import "dotenv/config";
 
 import { SMTPClient } from "emailjs";
-import { OTP } from "../models/otp.model.js";
+import { VerificationToken } from "../models/verification.token.model.js";
+import { log } from "console";
 
 const JWT_SECRET = process.env.JWT_SECRET ?? "secret";
 
-const _getVerificationCode = async (id) => {
-    const code = otp.generate(6, {
-        digits: true,
-        upperCaseAlphabets: false,
-        lowerCaseAlphabets: false,
-        specialChars: false,
-    });
-    await OTP.findOneAndDelete({ userId: id });
-    await OTP.create({ userId: id, otp: code });
-    return code;
-}
 
-const _generateJwt = ({ _id, email, jwtType, expiresIn }) => {
+const _generateJwt = ({ _id, firstName, lastName, email, expiresIn }) => {
     return JWT.sign(
         {
             _id,
+            firstName,
+            lastName,
             email,
-            jwtType
         },
         JWT_SECRET,
         {
@@ -33,39 +24,31 @@ const _generateJwt = ({ _id, email, jwtType, expiresIn }) => {
     );
 }
 
-export const getAuthTokens = ({ _id, email }) => {
-    const accessToken = _generateJwt(
+export const getAuthToken = ({ _id, firstName, lastName, email }) => {
+    const authToken = _generateJwt(
         {
             _id: _id,
             email: email,
-            jwtType: "access",
-            expiresIn: "10h",
+            firstName: firstName,
+            lastName: lastName,
+            expiresIn: "12h",
         },
     );
 
-    const refreshToken = _generateJwt(
-        {
-            _id: _id,
-            email: email,
-            jwtType: "refresh",
-            expiresIn: "1d"
-        },
-    );
-
-    return {
-        accessToken,
-        refreshToken
-    };
+    return authToken;
 }
 
 export const decodeToken = (token) => {
     return JWT.decode(token, JWT_SECRET);
 }
 
-export const sendEmailToClient = async ({ _id }) => {
-    const otp = await _getVerificationCode(_id);
+export const generateVerficationLink = async ({ userId, endpoint }) => {
+    const token = createHmac("sha256", "SECRET").digest("hex");
+    const link = `http://localhost:8080/${endpoint}?userId=${userId}&token=${token}`;
+    return { token, link };
+}
 
-    console.log(`OTP: ${otp}`);
+export const sendEmailToClient = async ({ email, link }) => {
     // const client = new SMTPClient({
     //     user: '',
     //     password: '',
@@ -76,10 +59,10 @@ export const sendEmailToClient = async ({ _id }) => {
 
     // try {
     //     const message = await client.sendAsync({
-    //         text: otp.toString(),
+    //         text: link,
     //         from: '',
-    //         to: '',
-    //         subject: 'Verification Code',
+    //         to: email,
+    //         subject: 'Verification Link',
     //     });
     //     console.log(message);
     // } catch (err) {
