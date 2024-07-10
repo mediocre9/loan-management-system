@@ -6,7 +6,6 @@ const userSchema = new Schema({
     firstName: {
         type: String,
         trim: true,
-        unique: true,
         required: [true, "first name is required!"],
         validate: {
             validator: validator.isAlpha,
@@ -16,7 +15,6 @@ const userSchema = new Schema({
     lastName: {
         type: String,
         trim: true,
-        unique: true,
         required: [true, "last name is required!"],
         validate: {
             validator: validator.isAlpha,

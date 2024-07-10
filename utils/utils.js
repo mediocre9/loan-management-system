@@ -3,8 +3,6 @@ import { createHmac } from "crypto";
 import "dotenv/config";
 
 import { SMTPClient } from "emailjs";
-import { VerificationToken } from "../models/verification.token.model.js";
-import { log } from "console";
 
 const JWT_SECRET = process.env.JWT_SECRET ?? "secret";
 
@@ -31,7 +29,7 @@ export const getAuthToken = ({ _id, firstName, lastName, email }) => {
             email: email,
             firstName: firstName,
             lastName: lastName,
-            expiresIn: "12h",
+            expiresIn: "3h",
         },
     );
 
@@ -44,9 +42,10 @@ export const decodeToken = (token) => {
 
 export const generateVerficationLink = async ({ userId, endpoint }) => {
     const token = createHmac("sha256", "SECRET").digest("hex");
-    const link = `http://localhost:8080/${endpoint}?userId=${userId}&token=${token}`;
+    const link = `http://localhost:8080/${endpoint}/${userId}/${token}`;
     return { token, link };
 }
+
 
 export const sendEmailToClient = async ({ email, link }) => {
     // const client = new SMTPClient({
