@@ -3,16 +3,27 @@
  * such as services, controller, routes etc . . .
  * Probably after all the core functionalities . . . 
  * 
+ * @todo Refactor HTML templates with partials - (optional)
+ * 
  * @todo Recheck the response statusCodes and send the valid ones
+ * 
+ * @todo Remove CORS
  * 
  * @todo Implement Create New and Ticket Features . . .
  * 
- * @todo Consider dynamically implementing 
- * rate limiting for various routes based on their importance
+ * @todo rate limiting for various routes based on their importance
  * 
  * @todo Use the helmet package for security . . .
  * 
- * @todo update the TTL index of OTP to 5 minutes
+ * @todo Implement resend-password and resend-verification routes
+ * 
+ * @todo update/recheck the TTL index of [VerificationToken] to 30 minutes
+ * 
+ * @todo update/recheck the TTL index of [PasswordResetToken] to 15 minutes
+ * 
+ * @todo Retest the flow of application
+ * 
+ * @todo Consider the use of flash messages - (optional)
  */
 
 
@@ -22,12 +33,20 @@ import cors from 'cors';
 import morgan from "morgan";
 import bcrypt from "bcrypt";
 import mongoose from "mongoose";
+import path from "path";
+import cookieParser from "cookie-parser";
+import validator from "validator";
+import MaskData from "maskdata";
+import { log } from "console";
 import "dotenv/config";
 
 import { ApiError } from "./utils/apiError.js";
-import { OTP, User } from "./models/index.js";
+import { AuthError } from "./utils/authError.js";
+import { VerificationToken, User } from "./models/index.js";
 import { verifyAuth, validateFields } from "./middlewares/index.js";
-import { decodeToken, getAuthTokens, sendEmailToClient } from "./utils/index.js";
+import { getAuthToken, sendEmailToClient } from "./utils/index.js";
+import { generateVerficationLink } from "./utils/utils.js";
+import { PasswordResetToken } from "./models/passwordReset.token.model.js";
 
 
 const PORT = process.env.PORT ?? 8081;
@@ -39,49 +58,146 @@ app.disable('x-powered-by');
 
 app.use(morgan("dev"))
 
-app.use(rateLimit());
+// app.use(rateLimit());
 
-app.use(cors({ origin: "*", credentials: true }));
+// app.use(cors({ origin: "*", credentials: true }));
 
 app.use(express.json());
 
+app.set("view engine", "ejs");
 
-app.get("/", (request, response) => {
-    response.send("Loan Management System API");
+app.set("views", "./views");
+
+app.use(cookieParser());
+
+app.use(express.urlencoded({ extended: true }));
+
+app.use(express.static(path.resolve("./public")));
+
+app.get("/", verifyAuth(), (request, response) => {
+    const authorized = request.token;
+    const { email, firstName, lastName } = request.decoded;
+    if (!authorized) {
+        return response.render("login");
+    }
+    return response.render("dashboard", { "email": email, "fullName": firstName.concat(" ", lastName) });
+});
+
+app.get("/login", (request, response) => {
+    return response.render("login");
+});
+
+app.get("/register", (request, response) => {
+    return response.render("register");
 });
 
 
 app.get("/dashboard", verifyAuth(), (request, response) => {
-    return response.send("DASHBORD ENDPOINT REACHED");
+    const authorized = request.token;
+    const { email, firstName, lastName } = request.decoded;
+    if (!authorized) {
+        return response.render("login");
+    }
+    return response.render("dashboard", { "email": email, "fullName": firstName.concat(" ", lastName) });
 });
 
 
-app.post("/register-account", validateFields(["email", "password"]), async (request, response, next) => {
+app.get("/create", verifyAuth(), (request, response) => {
+    const authorized = request.token;
+    const { email, firstName, lastName } = request.decoded;
+    if (!authorized) {
+        return response.render("login");
+    }
+    return response.render("create", { "email": email, "fullName": firstName.concat(" ", lastName) });
+});
+
+app.post("/register", validateFields(["firstName", "lastName", "email", "password"]), async (request, response, next) => {
     try {
-        const { email, password } = request.body;
+        const { firstName, lastName, email, password } = request.body;
+
+        if (!validator.isAlpha(firstName)) {
+            throw new ApiError(`${firstName} should not contain any digits or symbols!`);
+        }
+
+        if (!validator.isAlpha(lastName)) {
+            throw new ApiError(`${lastName} should not contain any digits or symbols!`);
+        }
+
+        if (!validator.isEmail(email)) {
+            throw new ApiError(`${email} is not a valid email address!`);
+        }
+
+        if (!validator.isStrongPassword(password, {
+            minLength: 8,
+            minNumbers: 1,
+            minLowercase: 1,
+            minSymbols: 1,
+            minUppercase: 1
+        })) {
+            throw new ApiError(`Password ${password} is not strong enough! Make sure your password is at least 8 characters long and includes at least one uppercase letter, one lowercase letter, one symbol, and one numeric value.`);
+        }
+
         let user = await User.findOne({ email: email });
 
         if (!user) {
-            user = await User.create({ email, password });
+            user = await User.create({ firstName, lastName, email, password });
         } else if (user.verified) {
             throw new ApiError("email is already in use!", 409);
         }
-        await sendEmailToClient(user);
-        return response.status(201).json({
-            "code": 201,
-            "status": "success",
-            "message": "A verification code has been sent to your email! It will expire after 2 minutes.",
-            "data": {
-                "_id": user._id,
-            }
+
+        const { link, token } = await generateVerficationLink({
+            endpoint: "verification",
+            userId: user._id
         });
+
+        const exists = await VerificationToken.findOne({ userId: user._id, token: token });
+
+        if (!exists) {
+            await VerificationToken.create({ userId: user._id, token: token });
+        }
+
+        await sendEmailToClient({ email: email, link: link });
+
+        const maskedEmail = MaskData.maskEmail2(email, {
+            maskWith: "*",
+            unmaskedStartCharactersBeforeAt: 2
+        });
+
+        return response
+            .status(201)
+            .render("verification", {
+                "email": maskedEmail
+            });
     } catch (error) {
         next(error);
     }
 });
 
 
-app.post("/login-account", validateFields(["email", "password"]), async (request, response, next) => {
+app.get("/verification", async (request, response, next) => {
+    try {
+        const { userId, token } = request.query;
+
+        const exists = await VerificationToken.findOne({ userId: userId, token: token });
+
+        if (!exists) {
+            throw new ApiError("A verification link has been expired!");
+        }
+
+        await VerificationToken.findByIdAndDelete(exists._id);
+        const user = await User.findByIdAndUpdate(userId, { verified: true });
+        const authToken = getAuthToken(user);
+        return response
+            .status(200)
+            .cookie("_aid", authToken)
+            .redirect("/dashboard");
+    } catch (error) {
+        next(error);
+    }
+});
+
+
+app.post("/login", validateFields(["email", "password"]), async (request, response, next) => {
     try {
         const { email, password } = request.body;
         const user = await User.findOne({ email: email });
@@ -97,215 +213,145 @@ app.post("/login-account", validateFields(["email", "password"]), async (request
         }
 
         if (!user.verified) {
-            await sendEmailToClient(user);
-            return response.status(200).json({
-                "code": 200,
-                "status": "success",
-                "message": `If ${email} matches the email address on your account, we'll send you a verification code.`,
-                "data": {
-                    "_id": user._id,
-                }
+            const { link, token } = await generateVerficationLink({
+                endpoint: "verification",
+                userId: user._id
+            });
+
+            await VerificationToken.create({ userId: user._id, token: token });
+
+            log(link);
+            await sendEmailToClient({ email: email, link: link });
+
+            const maskedEmail = MaskData.maskEmail2(email, {
+                maskWith: "*",
+                unmaskedStartCharactersBeforeAt: 2
+            });
+
+            return response.status(201).render("verification", {
+                "email": maskedEmail
             });
         }
 
-        const { accessToken, refreshToken } = getAuthTokens(user);
-        return response.status(200).json({
-            "code": 200,
-            "status": "success",
-            "message": "Signed in to account!",
-            "data": {
-                "_id": user._id,
-                "tokens": {
-                    "access_token": accessToken,
-                    "refresh_token": refreshToken,
-                }
-            }
-        });
+        const authToken = getAuthToken(user);
+        return response.status(200)
+            .cookie("_aid", authToken)
+            .redirect("/dashboard");
     } catch (error) {
         next(error);
     }
 });
 
-app.get("/resend-verification-code", rateLimit({
-    limit: 3,
-    windowMs: 3600000,
-    message: "You have exceeded the maximum number of OTP requests. Please try again tomorrow.",
-}), async (request, response, next) => {
+
+
+app.get("/reset-password", async (request, response) => {
+    return response.status(200).render("reset-password");
+});
+
+
+app.post("/reset-password", validateFields(["email"]), async (request, response, next) => {
     try {
-        const { email } = request.query;
+        const { email } = request.body;
 
-        if (!email) {
-            throw new ApiError("email query param is required!");
+        if (!validator.isEmail(email)) {
+            throw new ApiError(`${email} is not a valid email address!`);
         }
 
-        const user = await User.exists({ email: email });
+        const user = await User.findOne({ email: email });
 
-        if (user) {
-            await sendEmailToClient(user);
+        if (!user) {
+            return response.status(200).render("reset-password", {
+                message: "A password reset link has been sent to your email!"
+            });
         }
 
-        return response.status(200).json({
-            "code": 200,
-            "status": "success",
-            "message": `If ${email} matches the email address on your account, we'll send you a verification code.`,
+        const { link, token } = await generateVerficationLink({
+            endpoint: "change-password",
+            userId: user._id
         });
+        console.log(link);
+        const exists = await PasswordResetToken.findOne({ userId: user._id, token: token });
+        if (!exists) {
+            await PasswordResetToken.create({ userId: user._id, token: token });
+        }
+
+        await sendEmailToClient({ email: email, link: link });
+
+        return response.status(200).render("reset-password", {
+            message: "A password reset link has been sent to your email!"
+        });
+
     } catch (error) {
         next(error);
     }
 });
 
-app.post("/account-verification", validateFields(["userId", "otp"]), async (request, response, next) => {
+app.get("/change-password", async (request, response, next) => {
     try {
-        const { userId, otp } = request.body;
+        const { userId, token } = request.query;
 
-        const exists = await OTP.findOne({ userId: userId, otp: otp });
+        const exists = await PasswordResetToken.findOne({ userId: userId, token: token, });
 
         if (!exists) {
-            throw new ApiError("Your otp has been expired!");
+            throw new ApiError("Password reset link has been expired!");
         }
 
-        await OTP.findByIdAndDelete(exists._id);
-        const user = await User.findByIdAndUpdate(userId, { verified: true });
+        return response
+            .status(200)
+            .cookie("_rpid", token) // RPID - Reset Pwd Id (token)
+            .cookie("_rpuid", userId) // RPUID - Reset Pwd User Id
+            .render("change-password");
 
-        const { accessToken, refreshToken } = getAuthTokens(user);
-
-        return response.status(200).json({
-            "code": 200,
-            "status": "success",
-            "message": "Your email has been verified!",
-            "data": {
-                "_id": user?._id,
-                "tokens": {
-                    "access_token": accessToken,
-                    "refresh_token": refreshToken,
-                }
-            }
-        });
     } catch (error) {
         next(error);
     }
 });
 
-/**
- * if user clicks on reset password button
- * we send user email as query params at endpoint
- */
-app.get("/reset-password", async (request, response, next) => {
+app.post("/change-password", validateFields(["password"]), async (request, response, next) => {
     try {
-        const { email } = request.query;
-        const user = await User.exists({ email: email });
+        const { password } = request.body;
 
-        if (user) {
-            await sendEmailToClient(user);
+        const userId = request.cookies["_rpuid"];
+
+        const token = request.cookies["_rpid"];
+
+        const exists = await PasswordResetToken.findOne({ userId: userId, token: token });
+
+        if (!exists) {
+            throw new ApiError("Password reset link has been expired!");
         }
 
-        return response.status(200).json({
-            "code": 200,
-            "status": "success",
-            "message": `If ${email} matches the email address on your account, we'll send you a code.`,
-            "data": {
-                "_id": user?._id,
-            }
-        });
-    } catch (error) {
-        next(error);
-    }
-});
-
-
-/**
- * a code verification page to verify the user
- * if user has received the code he enters it 
- * to verify the indentity.
- * And then we will send a new page to enter
- * the new password to update
- */
-app.post("/reset-password", validateFields(["userId", "otp"]), async (request, response, next) => {
-    try {
-        const { userId, otp } = request.body;
-
-        const otpCode = await OTP.findOne({ userId: userId, otp: otp });
-
-        if (!otpCode) {
-            throw new ApiError("Your otp has been expired!", 401);
-        }
-
-        return response.status(201).json({
-            "code": 200,
-            "status": "success",
-            "message": "otp verified successfully",
-            "data": {
-                "_id": userId,
-            }
-        });
-    } catch (error) {
-        next(error);
-    }
-});
-
-
-/**
- * here we will obtain the user's new password
- * to update it
- */
-app.patch("/reset-password", validateFields(["userId", "password"]), async (request, response, next) => {
-    try {
-        const { userId, password } = request.body;
-
-        const user = User.findById(userId);
+        const user = await User.findById(userId);
 
         if (!user) {
             throw new ApiError("User not found!", 404);
         }
 
-        const isSamePassword = bcrypt.compareSync(password, user.password);
+        const isSamePassword = await bcrypt.compare(password, user.password);
 
         if (isSamePassword) {
-            return response.status(400).json({
-                "code": 400,
-                "status": "failure",
-                "message": "New password should be different from the current password!",
-                "data": {
-                    "_id": userId,
-                }
-            });
+            throw new ApiError("New password should be different from the current password!");
         }
 
-        await User.findByIdAndUpdate(userId, { password: password });
+        if (!validator.isStrongPassword(password, {
+            minLength: 8,
+            minNumbers: 1,
+            minLowercase: 1,
+            minSymbols: 1,
+            minUppercase: 1
+        })) {
+            throw new ApiError(`Password ${password} is not strong enough! Make sure your password is at least 8 characters long and includes at least one uppercase letter, one lowercase letter, one symbol, and one numeric value.`);
+        }
 
-        return response.status(200).json({
-            "code": 200,
-            "status": "success",
-            "message": "Password changed successfully",
-            "data": {
-                "_id": userId,
-            }
-        });
+        const hashed = await bcrypt.hash(password, 10);
+        await User.findByIdAndUpdate(userId, { password: hashed });
+        await PasswordResetToken.findByIdAndDelete(exists._id);
+        return response
+            .status(200) // change the status code here
+            .clearCookie("_rpid")
+            .clearCookie("_rpuid")
+            .redirect("/dashboard");
 
-    } catch (error) {
-        next(error);
-    }
-});
-
-app.get("/refresh-token", verifyAuth({ tokenType: 'refresh' }), async (request, response, next) => {
-    try {
-        const { _id, email } = decodeToken(request.token);
-        const user = { _id, email };
-
-        const { accessToken, refreshToken } = getAuthTokens(user);
-
-        return response.status(200).json({
-            "code": 200,
-            "status": "success",
-            "message": "Tokens refreshed successfully.",
-            "data": {
-                "_id": _id,
-                "tokens": {
-                    "access_token": accessToken,
-                    "refresh_token": refreshToken,
-                }
-            }
-        });
     } catch (error) {
         next(error);
     }
@@ -313,24 +359,34 @@ app.get("/refresh-token", verifyAuth({ tokenType: 'refresh' }), async (request, 
 
 
 app.use("*", (request, response) => {
-    return response.status(400).send("404 Not Found!");
+    return response.status(404).render("not-found");
 });
 
 app.use((error, request, response, next) => {
+    error.formData = request.body;
+
+    const url = request.url.replace("/", "");
+    const endpoint = url.split("?")[0];
+
     if (error instanceof ApiError) {
         return response
             .status(error.statusCode)
-            .json({
-                "code": error.statusCode,
-                "message": error.message
-            });
+            .render(endpoint, { error });
+    }
+
+    if (error instanceof AuthError) {
+        return response
+            .status(error.statusCode)
+            .redirect("/login");
     }
 
     return response
         .status(500)
         .json({
             "code": 500,
-            "message": "Internal Server Error!"
+            "message": "Internal Server Error!",
+            "error": error.message,
+            "stackTrace": error.stack
         });
 });
 
