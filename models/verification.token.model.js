@@ -1,16 +1,16 @@
 import { model, Schema } from "mongoose";
 
-const otpSchema = new Schema({
+const verificationTokenSchema = new Schema({
     userId: {
         type: Schema.Types.ObjectId,
         trim: true,
         required: [true, "userId is required!"],
     },
-    otp: {
+    token: {
         type: String,
         unique: true,
         trim: true,
-        required: [true, "otp is required!"],
+        required: [true, "verification token is required!"],
     },
     createdAt: {
         type: Date,
@@ -18,11 +18,11 @@ const otpSchema = new Schema({
     }
 });
 
-otpSchema.index({ createdAt: 1 }, { expireAfterSeconds: 60 });
+verificationTokenSchema.index({ createdAt: 1 }, { expireAfterSeconds: 1800 }); // 30m
 
-export const OTP = model('otp', otpSchema);
+export const VerificationToken = model('verification-token', verificationTokenSchema);
 
-OTP.syncIndexes()
+VerificationToken.syncIndexes()
     .then(() => {
         console.log("indexes are synchronized");
     })
