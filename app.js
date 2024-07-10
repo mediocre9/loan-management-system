@@ -29,7 +29,7 @@
 
 import express from "express";
 import rateLimit from "express-rate-limit";
-import cors from 'cors';
+import helmet from "helmet";
 import morgan from "morgan";
 import bcrypt from "bcrypt";
 import mongoose from "mongoose";
@@ -54,23 +54,20 @@ const DB_URL = process.env.LOCAL_DB_URL;
 
 const app = express();
 
-app.disable('x-powered-by');
 
-app.use(morgan("dev"))
-
-// app.use(rateLimit());
-
-// app.use(cors({ origin: "*", credentials: true }));
+app.use(helmet());
 
 app.use(express.json());
-
-app.set("view engine", "ejs");
-
-app.set("views", "./views");
 
 app.use(cookieParser());
 
 app.use(express.urlencoded({ extended: true }));
+
+app.use(morgan("dev"));
+
+app.set("view engine", "ejs");
+
+app.set("views", "./views");
 
 app.use(express.static(path.resolve("./public")));
 
@@ -80,7 +77,11 @@ app.get("/", verifyAuth(), (request, response) => {
     if (!authorized) {
         return response.render("login");
     }
-    return response.render("dashboard", { "email": email, "fullName": firstName.concat(" ", lastName) });
+    return response
+        .render("dashboard", {
+            "email": email,
+            "fullName": firstName.concat(" ", lastName)
+        });
 });
 
 app.get("/login", (request, response) => {
@@ -98,7 +99,11 @@ app.get("/dashboard", verifyAuth(), (request, response) => {
     if (!authorized) {
         return response.render("login");
     }
-    return response.render("dashboard", { "email": email, "fullName": firstName.concat(" ", lastName) });
+    return response
+        .render("dashboard", {
+            "email": email,
+            "fullName": firstName.concat(" ", lastName)
+        });
 });
 
 
@@ -108,7 +113,11 @@ app.get("/create", verifyAuth(), (request, response) => {
     if (!authorized) {
         return response.render("login");
     }
-    return response.render("create", { "email": email, "fullName": firstName.concat(" ", lastName) });
+    return response
+        .render("create", {
+            "email": email,
+            "fullName": firstName.concat(" ", lastName)
+        });
 });
 
 app.post("/register", validateFields(["firstName", "lastName", "email", "password"]), async (request, response, next) => {
@@ -150,6 +159,9 @@ app.post("/register", validateFields(["firstName", "lastName", "email", "passwor
             userId: user._id
         });
 
+
+        log(link);
+
         const exists = await VerificationToken.findOne({ userId: user._id, token: token });
 
         if (!exists) {
@@ -174,9 +186,17 @@ app.post("/register", validateFields(["firstName", "lastName", "email", "passwor
 });
 
 
-app.get("/verification", async (request, response, next) => {
+app.get("/verification/:userId/:token", async (request, response, next) => {
     try {
-        const { userId, token } = request.query;
+        const { userId, token } = request.params;
+
+        if (!userId && !token) {
+            return next();
+        }
+
+        if (!mongoose.isValidObjectId(userId)) {
+            return next();
+        }
 
         const exists = await VerificationToken.findOne({ userId: userId, token: token });
 
@@ -189,7 +209,7 @@ app.get("/verification", async (request, response, next) => {
         const authToken = getAuthToken(user);
         return response
             .status(200)
-            .cookie("_aid", authToken)
+            .cookie("_aid", authToken, { maxAge: 7200000 }) // 2h in ms
             .redirect("/dashboard");
     } catch (error) {
         next(error);
@@ -234,8 +254,9 @@ app.post("/login", validateFields(["email", "password"]), async (request, respon
         }
 
         const authToken = getAuthToken(user);
-        return response.status(200)
-            .cookie("_aid", authToken)
+        return response
+            .status(200)
+            .cookie("_aid", authToken, { maxAge: 7200000 }) // 2h in ms
             .redirect("/dashboard");
     } catch (error) {
         next(error);
@@ -245,7 +266,9 @@ app.post("/login", validateFields(["email", "password"]), async (request, respon
 
 
 app.get("/reset-password", async (request, response) => {
-    return response.status(200).render("reset-password");
+    return response
+        .status(200)
+        .render("reset-password");
 });
 
 
@@ -260,16 +283,20 @@ app.post("/reset-password", validateFields(["email"]), async (request, response,
         const user = await User.findOne({ email: email });
 
         if (!user) {
-            return response.status(200).render("reset-password", {
-                message: "A password reset link has been sent to your email!"
-            });
+            return response
+                .status(200)
+                .render("reset-password", {
+                    message: "A password reset link has been sent to your email!"
+                });
         }
 
         const { link, token } = await generateVerficationLink({
             endpoint: "change-password",
             userId: user._id
         });
-        console.log(link);
+
+        log(link);
+
         const exists = await PasswordResetToken.findOne({ userId: user._id, token: token });
         if (!exists) {
             await PasswordResetToken.create({ userId: user._id, token: token });
@@ -277,18 +304,28 @@ app.post("/reset-password", validateFields(["email"]), async (request, response,
 
         await sendEmailToClient({ email: email, link: link });
 
-        return response.status(200).render("reset-password", {
-            message: "A password reset link has been sent to your email!"
-        });
+        return response
+            .status(200)
+            .render("reset-password", {
+                message: "A password reset link has been sent to your email!"
+            });
 
     } catch (error) {
         next(error);
     }
 });
 
-app.get("/change-password", async (request, response, next) => {
+app.get("/change-password/:userId/:token", async (request, response, next) => {
     try {
-        const { userId, token } = request.query;
+        const { userId, token } = request.params;
+
+        if (!userId && !token) {
+            return next();
+        }
+
+        if (!mongoose.isValidObjectId(userId)) {
+            return next();
+        }
 
         const exists = await PasswordResetToken.findOne({ userId: userId, token: token, });
 
@@ -300,20 +337,21 @@ app.get("/change-password", async (request, response, next) => {
             .status(200)
             .cookie("_rpid", token) // RPID - Reset Pwd Id (token)
             .cookie("_rpuid", userId) // RPUID - Reset Pwd User Id
-            .render("change-password");
+            .render("change-password", {
+                userId: userId,
+                token: token
+            });
 
     } catch (error) {
         next(error);
     }
 });
 
-app.post("/change-password", validateFields(["password"]), async (request, response, next) => {
+app.post("/change-password/:userId/:token", validateFields(["password"]), async (request, response, next) => {
     try {
         const { password } = request.body;
 
-        const userId = request.cookies["_rpuid"];
-
-        const token = request.cookies["_rpid"];
+        const { userId, token } = request.params;
 
         const exists = await PasswordResetToken.findOne({ userId: userId, token: token });
 
@@ -347,7 +385,7 @@ app.post("/change-password", validateFields(["password"]), async (request, respo
         await User.findByIdAndUpdate(userId, { password: hashed });
         await PasswordResetToken.findByIdAndDelete(exists._id);
         return response
-            .status(200) // change the status code here
+            .status(201) // change the status code here
             .clearCookie("_rpid")
             .clearCookie("_rpuid")
             .redirect("/dashboard");
@@ -357,18 +395,17 @@ app.post("/change-password", validateFields(["password"]), async (request, respo
     }
 });
 
-
 app.use("*", (request, response) => {
     return response.status(404).render("not-found");
 });
 
 app.use((error, request, response, next) => {
-    error.formData = request.body;
-
-    const url = request.url.replace("/", "");
-    const endpoint = url.split("?")[0];
-
     if (error instanceof ApiError) {
+        error.formData = request.body;
+        error.userId = request.cookies["_rpuid"];
+        error.token = request.cookies["_rpid"];
+
+        const endpoint = request.url.split("/")[1];
         return response
             .status(error.statusCode)
             .render(endpoint, { error });
@@ -377,6 +414,7 @@ app.use((error, request, response, next) => {
     if (error instanceof AuthError) {
         return response
             .status(error.statusCode)
+            .clearCookie("_aid")
             .redirect("/login");
     }
 
